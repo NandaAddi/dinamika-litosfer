@@ -11,12 +11,16 @@ Media pembelajaran digital interaktif berbasis web untuk materi **Dinamika Litos
   - **Lempeng Tektonik:** Visualisasi interaktif kerak lempeng litosfer bumi.
   - **Vulkanisme:** Potongan melintang 3D dapur magma, pipa kepundan (*diatrema*), sill, dan kawah.
   - **Tenaga Endogen & Geomorfologi:** Model 3D morfologi potongan melintang Gunung Semeru.
-- **📖 Slider Pembelajaran Interaktif (4-Step Guided Learning):**
+- **📖 Slider Pembelajaran Interaktif (5–8 slide per modul):**
+  - Jumlah slide: Beranda 2, Struktur Bumi 5, Lempeng Tektonik 5, Vulkanisme 7, Tenaga Endogen 8.
   - Tata letak *no-scroll split-screen* (50:50) yang memadukan model 3D dan kartu penjelasan konsep.
   - Dilengkapi *stepper track*, kartu sorotan konsep (*highlight box*), *chips* materi, dan tombol navigasi taktil.
+  - Modul Tenaga Endogen memuat diagram SVG **Siklus Batuan** (*rock cycle*).
 - **📝 Kuis Evaluasi Interaktif:**
-  - 10 soal evaluasi berbobot dengan diagram visual ilmiah (sesar/graben, batas divergen, dll.).
+  - 13 soal evaluasi dengan diagram visual ilmiah (sesar/graben, batas divergen) dan soal batuan serta sesar.
   - Umpan balik (*feedback*) otomatis, kalkulasi skor dinamis, dan cincin statistik persentase kelulusan.
+- **📚 Referensi Literatur:**
+  - Tombol **Referensi** di topbar membuka modal berisi 11 rujukan ilmiah dari dokumen materi, lengkap dengan penanda bab.
 - **🎨 Latar Belakang Fotografi Alam Sinematik (16:9 Widescreen):**
   - Setiap halaman memiliki gambar atmosferik beresolusi tinggi dengan teknik *Deep Cinematic Vignette* dan kartu materi *glassmorphism* lembut yang nyaman di mata.
 - **⚡ Preloader Interaktif:**

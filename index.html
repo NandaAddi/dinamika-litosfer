@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dinamika Litosfer — Media Pembelajaran Interaktif</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
@@ -55,33 +55,87 @@
         <img src="assets/images/Picture1.png" alt="Logo Mitra: Diktisaintek Berdampak, Universitas Negeri Malang, FIS, Departemen Geografi" class="topbar-logo-img">
       </div>
       <div class="crumb" id="crumb">🏠 Beranda</div>
+      <button type="button" class="refs-btn" id="btn-refs">📚 Referensi</button>
     </div>
 
     <div class="pages">
 
       <!-- ============ HALAMAN: BERANDA ============ -->
-      <section class="page active" id="page-beranda">
-        <div class="hero-grid">
-          <div>
-            <div class="hero-badges">
-              <span class="hbadge">4 Konten Interaktif</span>
-              <span class="hbadge">Kuis Evaluasi</span>
-              <span class="hbadge">Visualisasi 3D</span>
+      <section class="page fit-view active" id="page-beranda">
+        <div class="mobile-view-toggle">
+          <button class="mobile-toggle-btn active" data-view="model">🧊 Model 3D</button>
+          <button class="mobile-toggle-btn" data-view="slider">📖 Pengantar</button>
+        </div>
+
+        <div class="material-split">
+          <!-- Kolom Kiri: Slider Card Beranda (Slide 1: Pengantar; Slide 2: Pertanyaan Pemantik) -->
+          <div class="slider-frame-card">
+            <div class="slider-header">
+              <div class="slider-top-meta">
+                <span class="slider-topic-tag">Eksplorasi Kurikulum</span>
+                <span class="slider-step-count">Slide 1 dari 2</span>
+              </div>
+              <div class="slider-stepper-track">
+                <div class="slider-stepper-fill" style="width:50%"></div>
+              </div>
             </div>
-            <h1>Dinamika <em>Litosfer</em></h1>
-            <p class="lead">Pengantar interaktif mengenai dinamika pembentukan muka bumi melalui tenaga endogen dan eksogen yang didukung oleh visualisasi animasi dan evaluasi pembelajaran.</p>
-            <div style="display:flex;gap:11px;flex-wrap:wrap">
-              <button class="btn btn-magma" data-goto="struktur">Mulai Belajar →</button>
-              <button class="btn btn-outline" data-goto="kuis">Langsung ke Kuis</button>
+
+            <div class="slider-body">
+              <!-- Slide 1: Hero Pengantar & Capaian -->
+              <div class="slide-item active">
+                <div class="hero-badges" style="margin-bottom:10px">
+                  <span class="hbadge" style="background:rgba(14,42,58,.08);color:var(--deep);border-color:#d4c8b8">4 Konten Interaktif 3D</span>
+                  <span class="hbadge" style="background:rgba(14,42,58,.08);color:var(--deep);border-color:#d4c8b8">Kuis Evaluasi</span>
+                  <span class="hbadge" style="background:rgba(14,42,58,.08);color:var(--deep);border-color:#d4c8b8">Pertanyaan Pemantik</span>
+                </div>
+                <h1 style="font-size:2rem;margin-bottom:8px;color:var(--deep)">Dinamika <em style="color:var(--magma);font-style:normal">Litosfer</em></h1>
+                <p style="font-size:.95rem;color:#354551;line-height:1.55;margin-bottom:12px">Eksplorasi interaktif mengenai dinamika interior bumi, tektonik lempeng, vulkanisme, siklus batuan, serta tenaga endogen dan eksogen beserta pengaruh nyata dan antropogeniknya terhadap kehidupan.</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+                  <button class="btn btn-magma" data-goto="struktur">Mulai Belajar 🌍 →</button>
+                  <button class="btn btn-outline" style="color:var(--deep);border-color:#c8bdae;background:#f5efe6" data-goto="kuis">Uji Pemahaman 📝</button>
+                </div>
+                <div class="hero-goal" style="max-width:none;margin-top:0;background:#fdf8f0;border-left:4px solid var(--magma);border-color:#edd5b8;color:#22303a;padding:12px 14px">
+                  <b style="color:var(--magma);font-size:.78rem;margin-bottom:4px">Tujuan Pembelajaran Geografi</b>
+                  <span style="color:#4a5965;font-size:.88rem;line-height:1.5;display:block">Menganalisis karakteristik lapisan bumi, batas lempeng, vulkanisme, siklus batuan, serta deformasi tenaga endogen dan perombakan eksogen-antropogenik.</span>
+                  <div style="margin-top:8px;padding-top:6px;border-top:1px dashed #e2cfb7;font-size:.8rem;color:#5a6b77">
+                    <b>🏛️ Pengembang:</b> Departemen Geografi · FIS · Universitas Negeri Malang (Diktisaintek Berdampak)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 2: Pertanyaan Pemantik Kelas -->
+              <div class="slide-item">
+                <h3 style="display:flex;align-items:center;gap:8px;font-size:1.18rem;margin-bottom:8px;color:var(--deep)"><span>💡</span> Pertanyaan Pemantik untuk Diskusi Kelas</h3>
+                <p style="font-size:.88rem;color:#556673;margin-bottom:10px">Renungkan 4 pertanyaan esensial ini sebelum menjelajahi modul materi interaktif:</p>
+                <div class="pemantik-grid" style="gap:8px">
+                  <div class="pemantik-card" style="background:#f9f5ee;border:1px solid #e8decb;padding:9px 12px">
+                    <span class="p-tag" style="font-size:.72rem;padding:2px 7px;margin-bottom:3px;background:var(--magma);color:#fff">01 · Bukti Interior Bumi</span>
+                    <p style="font-size:.82rem;color:#2b3a44;line-height:1.4">Jika lubang terdalam Kola hanya 12 km, bagaimana ilmuwan tahu inti bumi terdiri dari besi-nikel cair & padat?</p>
+                  </div>
+                  <div class="pemantik-card" style="background:#f9f5ee;border:1px solid #e8decb;padding:9px 12px">
+                    <span class="p-tag" style="font-size:.72rem;padding:2px 7px;margin-bottom:3px;background:var(--magma);color:#fff">02 · Sebaran Gempa Nusantara</span>
+                    <p style="font-size:.82rem;color:#2b3a44;line-height:1.4">Mengapa gempa bumi sangat aktif di Sumatra dan Jawa, namun relatif jarang di Kalimantan? Telusuri batas lempeng tektonik!</p>
+                  </div>
+                  <div class="pemantik-card" style="background:#f9f5ee;border:1px solid #e8decb;padding:9px 12px">
+                    <span class="p-tag" style="font-size:.72rem;padding:2px 7px;margin-bottom:3px;background:var(--magma);color:#fff">03 · Merapi vs Kilauea</span>
+                    <p style="font-size:.82rem;color:#2b3a44;line-height:1.4">Mengapa letusan Merapi menghasilkan awan panas (<i>nuée ardente</i>), sedangkan Hawaii berupa lelehan lava tenang?</p>
+                  </div>
+                  <div class="pemantik-card" style="background:#f9f5ee;border:1px solid #e8decb;padding:9px 12px">
+                    <span class="p-tag" style="font-size:.72rem;padding:2px 7px;margin-bottom:3px;background:var(--magma);color:#fff">04 · Antropogenik Jakarta</span>
+                    <p style="font-size:.82rem;color:#2b3a44;line-height:1.4">Penurunan tanah Jakarta mencapai 5–15 cm/tahun. Apakah murni alami atau akibat eksploitasi air tanah manusia?</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="hero-goal">
-              <b>Tujuan Pembelajaran</b>
-              <span>Memahami struktur lapisan bumi, lempeng tektonik, vulkanisme, serta tenaga endogen dan eksogen beserta dampaknya terhadap bentuk muka bumi.</span>
+
+            <div class="slider-footer">
+              <button class="btn btn-outline btn-prev-slide" style="color:var(--deep);border-color:#d4c8b8;background:#f5efe6">← Sebelumnya</button>
+              <button class="btn btn-magma btn-next-slide" data-cta-target="struktur" data-cta-label="Mulai Modul 1 🌍 →" data-first-label="Pertanyaan Pemantik 💡 →">Pertanyaan Pemantik 💡 →</button>
             </div>
           </div>
 
-          <!-- ===== MODEL 3D UTAMA (BERANDA) ===== -->
-          <div class="model-slot">
+          <!-- Kolom Kanan: Model 3D Slot -->
+          <div class="model-frame-card">
             <div class="model-badge"><span>🌍</span> 3D Interaktif · Dinamika Litosfer</div>
             <iframe title="Struktur Lapisan Bumi" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/24f34cff58d548e2bfbada415295cbd7/embed"></iframe>
             <div class="model-author-bar">3D Model: Sketchfab</div>
@@ -107,62 +161,79 @@
             <div class="slider-header">
               <div class="slider-top-meta">
                 <span class="slider-topic-tag">01 — Geologi Dasar</span>
-                <span class="slider-step-count">Slide 1 dari 4</span>
+                <span class="slider-step-count">Slide 1 dari 5</span>
               </div>
               <div class="slider-stepper-track">
-                <div class="slider-stepper-fill" style="width:25%"></div>
+                <div class="slider-stepper-fill" style="width:20%"></div>
               </div>
             </div>
 
             <div class="slider-body">
               <!-- Slide 1 -->
               <div class="slide-item active">
-                <h3>Metode Studi Seismik Lapisan Bumi</h3>
-                <p>Bagaimana para geolog mengetahui lapisan dalam bumi tanpa pernah mengebornya hingga ke inti? Pengetahuan struktur interior bumi diperoleh melalui analisis kecepatan rambatan gelombang gempa bumi.</p>
+                <h3>Metode Seismik & Bukti Interior Bumi</h3>
+                <p>Pengeboran terdalam manusia (<i>Kola Superdeep Borehole</i> di Rusia) hanya mencapai ±12 km, nilai yang sangat kecil dibandingkan radius bumi 6.371 km. Pengetahuan interior bumi diperoleh secara tidak langsung melalui analisis rambatan gelombang gempa bumi (seismik):</p>
                 <div class="highlight-box">
-                  <b>🔬 Studi Gelombang P & S:</b><br>
-                  • <b>Gelombang Primer (P):</b> Merambat paling cepat, mampu menembus medium padat maupun cair.<br>
-                  • <b>Gelombang Sekunder (S):</b> Gelombang transversal yang <i>hanya</i> dapat merambat melalui zat padat. Hilangnya gelombang S di kedalaman tertentu membuktikan adanya lapisan cair (inti luar).
+                  <b>🔬 Gelombang Primer (P) vs Sekunder (S):</b><br>
+                  • <b>Gelombang Primer (P):</b> Merambat tercepat, berupa gelombang kompresi yang mampu menembus batuan padat maupun medium cair.<br>
+                  • <b>Gelombang Sekunder (S):</b> Gelombang geser transversal yang <i>hanya</i> merambat pada zat padat. Hilangnya gelombang S di kedalaman 2.900 km membuktikan adanya lapisan cair (inti luar).
                 </div>
                 <div class="chips">
-                  <span>Gelombang P & S</span><span>Zona Bayangan (Shadow Zone)</span><span>Diskontinuitas Mohorovicic</span>
+                  <span>Gelombang P & S</span><span>Zona Bayangan (Shadow Zone)</span><span>Kola Borehole (12 km)</span>
                 </div>
               </div>
 
               <!-- Slide 2 -->
               <div class="slide-item">
-                <h3>Kerak Bumi (Crust) — Felsik vs Mafik</h3>
-                <p>Kerak adalah cangkang terluar bumi yang padat, tipis, dan kaku tempat seluruh kehidupan berlangsung. Berdasarkan komposisinya, kerak terbagi menjadi dua:</p>
+                <h3>Aplikasi Seismologi di Indonesia</h3>
+                <p>Wilayah kepulauan Indonesia menjadi laboratorium alam seismotektonik paling dinamis di dunia:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🏔️</span> <div><b>Kerak Benua (Continental Crust):</b> Ketebalan 30–70 km, kaya silika-aluminium (SiAl), batuan granit/<b>felsik</b>, massa jenis lebih ringan (~2,7 g/cm³).</div></li>
-                  <li><span class="b-ic">🌊</span> <div><b>Kerak Samudra (Oceanic Crust):</b> Ketebalan 5–10 km, kaya silika-magnesium (SiMa), batuan basalt/<b>mafik</b>, massa jenis lebih padat (~3,0 g/cm³).</div></li>
+                  <li><span class="b-ic">🇮🇩</span> <div><b>Tomografi Seismik BMKG:</b> Rekaman gelombang gempa signifikan (seperti Gempa Yogyakarta 2006 dan Palu 2018) diolah untuk memetakan penjalaran gelombang dan struktur kerak di bawah Nusantara.</div></li>
+                  <li><span class="b-ic">📡</span> <div><b>Mitigasi Bencana:</b> Analisis kecepatan gelombang seismik memungkinkan sistem peringatan dini gempa (<i>InaTEWS</i>) mendeteksi gempa pemicu tsunami dalam hitungan menit.</div></li>
                 </ul>
                 <div class="highlight-box">
-                  <b>💡 Kunci Konsep:</b> Karena massa jenisnya lebih padat, lempeng samudra akan selalu tertekuk ke bawah (subduksi) saat bertabrakan dengan lempeng benua.
+                  <b>💡 Kunci Analisis:</b> Perubahan kecepatan dan arah pembiasan gelombang seismik menandai batas bidang diskontinuitas antar-lapisan bumi (<i>Mohorovičić &amp; Gutenberg</i>).
                 </div>
               </div>
 
               <!-- Slide 3 -->
               <div class="slide-item">
-                <h3>Mantel Bumi & Astenosfer (Mantle)</h3>
-                <p>Mantel membentang hingga kedalaman 2.900 km dan mencakup lebih dari 80% volume bumi, tersusun atas batuan silikat kaya besi dan magnesium.</p>
+                <h3>Kerak Benua vs Kerak Samudra (SiAl vs SiMa)</h3>
+                <p>Kerak adalah cangkang terluar bumi tempat berlangsungnya seluruh peradaban dan biosfer:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🧱</span> <div><b>Litosfer:</b> Lapisan kaku setebal ±100 km yang mencakup seluruh kerak ditambah mantel paling atas.</div></li>
-                  <li><span class="b-ic">🔥</span> <div><b>Astenosfer:</b> Lapisan semi-plastis/lunak pada mantel atas bersuhu sangat tinggi (±1.300–3.000 °C).</div></li>
+                  <li><span class="b-ic">🏔️</span> <div><b>Kerak Benua (Continental Crust):</b> Ketebalan 30–70 km, kaya Silika-Aluminium (SiAl), didominasi granit <b>felsik</b> dengan massa jenis lebih ringan (~2,7 g/cm³).</div></li>
+                  <li><span class="b-ic">🌊</span> <div><b>Kerak Samudra (Oceanic Crust):</b> Ketebalan 5–10 km, kaya Silika-Magnesium (SiMa), didominasi basalt <b>mafik</b> dengan massa jenis lebih padat (~3,0 g/cm³).</div></li>
                 </ul>
                 <div class="highlight-box">
-                  <b>⚡ Mesin Penggerak:</b> Panas internal bumi memicu <b>arus konveksi</b> di astenosfer yang mengapungkan dan menggeser lempeng-lempeng litosfer di atasnya.
+                  <b>💡 Implikasi Subduksi:</b> Perbedaan densitas ini menyebabkan kerak samudra yang lebih berat selalu tertekuk dan menunjam (subduksi) ke bawah kerak benua saat bertumbukan.
                 </div>
               </div>
 
               <!-- Slide 4 -->
               <div class="slide-item">
-                <h3>Inti Bumi (Core) — Luar Cair & Dalam Padat</h3>
-                <p>Inti bumi berjarak hingga 6.371 km ke pusat bumi, tersusun hampir seluruhnya dari paduan logam berat Besi (Fe) dan Nikel (Ni).</p>
+                <h3>Mantel Bumi, Litosfer & Astenosfer Plastis</h3>
+                <p>Mantel membentang hingga kedalaman 2.900 km dan menyusun <b>84% volume bumi</b>, tersusun dari batuan silikat kaya besi dan magnesium:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🌊</span> <div><b>Inti Luar (Outer Core, tebal ±2.200 km):</b> Berwujud <b>cair</b>. Arus pusaran logam cair konduktif di sini memicu efek dinamo yang menghasilkan <b>medan magnet bumi</b> (pelindung dari radiasi kosmik).</div></li>
-                  <li><span class="b-ic">💎</span> <div><b>Inti Dalam (Inner Core, radius ±1.220 km):</b> Bersuhu ekstrem (±5.500 °C, sepanas permukaan matahari), namun berwujud <b>padat</b> murni karena tekanan gravitasi raksasa.</div></li>
+                  <li><span class="b-ic">🧱</span> <div><b>Litosfer:</b> Lapisan kaku dan rapuh setebal ±100 km, mencakup seluruh kerak serta bagian teratas mantel bumi. Terpecah menjadi lempeng tektonik.</div></li>
+                  <li><span class="b-ic">🔥</span> <div><b>Astenosfer:</b> Lapisan mantel atas yang panas dan bersifat <b>plastis/semi-cair</b>, memungkinkan lempeng litosfer bergerak di atasnya.</div></li>
+                  <li><span class="b-ic">🧊</span> <div><b>Mesosfer (Mantel Bawah):</b> Lebih kaku dan kokoh karena tekanan yang makin besar ke arah kedalaman.</div></li>
                 </ul>
+                <div class="highlight-box">
+                  <b>⚡ Mesin Penggerak Mantel:</b> Panas internal bumi memicu <b>arus konveksi termal</b> di astenosfer yang mengapungkan dan menggeser lempeng-lempeng litosfer di atasnya.
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="slide-item">
+                <h3>Inti Luar Cair & Inti Dalam Padat (Fe-Ni)</h3>
+                <p>Inti bumi berpusat dari kedalaman 2.900 km hingga 6.371 km, tersusun dari paduan logam berat Besi (Fe) dan Nikel (Ni):</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🌊</span> <div><b>Inti Luar (Outer Core, 2.900–5.150 km):</b> Berwujud <b>cair</b>. Sirkulasi konveksi logam cair konduktif ini memicu <i>efek dinamo (geodynamo)</i> yang membangkitkan <b>medan magnet bumi</b>.</div></li>
+                  <li><span class="b-ic">💎</span> <div><b>Inti Dalam (Inner Core, 5.150–6.371 km):</b> Bersuhu ekstrem (>5.000 °C), namun berwujud <b>padat</b> karena tekanan litosferik gravitasi yang teramat dahsyat.</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Inti Luar Cair</span><span>Inti Dalam Padat</span><span>Efek Dinamo</span><span>Medan Magnet Bumi</span>
+                </div>
               </div>
             </div>
 
@@ -192,59 +263,80 @@
             <div class="slider-header">
               <div class="slider-top-meta">
                 <span class="slider-topic-tag">02 — Dinamika Litosfer</span>
-                <span class="slider-step-count">Slide 1 dari 4</span>
+                <span class="slider-step-count">Slide 1 dari 5</span>
               </div>
               <div class="slider-stepper-track">
-                <div class="slider-stepper-fill" style="width:25%"></div>
+                <div class="slider-stepper-fill" style="width:20%"></div>
               </div>
             </div>
 
             <div class="slider-body">
               <!-- Slide 1 -->
               <div class="slide-item active">
-                <h3>Teori Tektonik Lempeng & Arus Konveksi</h3>
-                <p>Permukaan bumi terbagi menjadi lempeng-lempeng litosfer kaku yang bergerak relatif satu sama lain di atas lapisan astenosfer yang plastis.</p>
-                <div class="highlight-box">
-                  <b>🔥 Penggerak Lempeng:</b> Panas dari inti bumi menciptakan arus konveksi sirkuler di mantel. Magma panas naik, mendingin di dekat permukaan, lalu turun kembali, menyeret lempeng litosfer di atasnya.
-                </div>
+                <h3>Hipotesis Continental Drift Alfred Wegener</h3>
+                <p>Pada tahun 1912, Alfred Wegener mengemukakan hipotesis bahwa seluruh benua pernah bersatu dalam superbenua tunggal bernama <b>Pangaea</b>:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🧩</span> <div><b>Kesesuaian Morfologis:</b> Garis pantai timur Amerika Selatan tampak cocok sempurna bila disatukan dengan garis pantai barat Afrika.</div></li>
+                  <li><span class="b-ic">🌿</span> <div><b>Bukti Fosil Purba:</b> Fosil identik pakis purba <i>Glossopteris</i> dan reptil air tawar <i>Mesosaurus</i> ditemukan melintasi benua-benua yang kini terpisah samudra.</div></li>
+                </ul>
                 <div class="chips">
-                  <span>Lempeng Indo-Australia</span><span>Lempeng Eurasia</span><span>Lempeng Pasifik</span><span>Cincin Api (Ring of Fire)</span>
+                  <span>Alfred Wegener (1912)</span><span>Pangaea</span><span>Fosil Glossopteris</span><span>Kesesuaian Pantai</span>
                 </div>
               </div>
 
               <!-- Slide 2 -->
               <div class="slide-item">
-                <h3>Batas Konvergen (Saling Bertubrukan)</h3>
-                <p>Ketika dua lempeng litosfer bergerak saling mendekat dan bertumbukan, tercipta bentukan relief permukaan bumi yang sangat dramatis:</p>
-                <ul class="info-points">
-                  <li><span class="b-ic">⬇️</span> <div><b>Zona Subduksi & Palung (Trench):</b> Lempeng samudra yang lebih berat menunjam ke bawah lempeng benua, membentuk palung laut yang curam.</div></li>
-                  <li><span class="b-ic">🌋</span> <div><b>Busur Vulkanik & Pegunungan:</b> Pelelehan lempeng yang menunjam menghasilkan kantung magma yang naik membentuk deretan gunung api (seperti di Pulau Sumatera, Jawa, Bali).</div></li>
-                  <li><span class="b-ic">⚠️</span> <div><b>Gempa Tektonik Megathrust:</b> Pelepasan gesekan elastis di bidang kontak memicu gempa dangkal hingga dalam berskala dahsyat dan tsunami.</div></li>
-                </ul>
+                <h3>Teori Tektonik Lempeng & 3 Gaya Penggerak</h3>
+                <p>Teori dimatangkan oleh Harry Hess (1960-an) melalui pemekaran dasar samudra (<i>seafloor spreading</i>) dan paleomagnetisme purba:</p>
+                <div class="highlight-box">
+                  <b>⚡ 3 Mekanisme Penggerak Utama Lempeng:</b><br>
+                  • <b>Konveksi Mantel Termal:</b> Arus sirkulasi panas dari interior bumi yang menggeser lempeng.<br>
+                  • <b>Slab Pull:</b> Tarikan gravitasi lempeng samudra dingin dan padat saat menunjam ke mantel.<br>
+                  • <b>Ridge Push:</b> Gaya dorong gravitasi dari lereng tinggian pematang samudra.
+                </div>
+                <div class="chips">
+                  <span>Harry Hess</span><span>Seafloor Spreading</span><span>Slab Pull</span><span>Ridge Push</span>
+                </div>
               </div>
 
               <!-- Slide 3 -->
               <div class="slide-item">
-                <h3>Batas Divergen (Saling Memisah)</h3>
-                <p>Dua lempeng saling menjauh akibat arus konveksi yang berpisah arah. Rekahan yang terbentuk memicu naiknya magma dari mantel:</p>
+                <h3>Batas Konvergen & Tripel Lempeng Indonesia</h3>
+                <p>Pertemuan lempeng yang saling mendekat dan bertumbukan. Indonesia berada pada konvergensi tripel: <b>Lempeng Indo-Australia</b>, <b>Eurasia</b>, dan <b>Pasifik</b>:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🌊</span> <div><b>Kerak Samudra Baru:</b> Magma mengisi retakan dan membeku di dasar laut, terus-menerus memperluas lantai samudra (<i>sea-floor spreading</i>).</div></li>
-                  <li><span class="b-ic">⛰️</span> <div><b>Pematang Tengah Samudra:</b> Rangkaian pegunungan bawah laut terpanjang di bumi (contoh: <i>Mid-Atlantic Ridge</i>).</div></li>
-                  <li><span class="b-ic">🏞️</span> <div><b>Lembah Retakan Benua (Rift Valley):</b> Pemisahan di daratan benua, seperti Great Rift Valley di Afrika Timur.</div></li>
+                  <li><span class="b-ic">⬇️</span> <div><b>Subduksi & Palung Sunda:</b> Lempeng samudra menunjam di bawah lempeng benua, membentuk palung samudra yang sangat dalam di barat Sumatra–selatan Jawa.</div></li>
+                  <li><span class="b-ic">🌋</span> <div><b>Busur Magmatik & Megathrust:</b> Memicu deretan gunung api aktif (<i>Ring of Fire</i>) dan zona <b>Sunda Megathrust</b> pemicu gempa dahsyat serta tsunami (Aceh 2004).</div></li>
                 </ul>
+                <div class="chips">
+                  <span>Batas Konvergen</span><span>Subduksi</span><span>Sunda Megathrust</span><span>Cincin Api Pasifik</span>
+                </div>
               </div>
 
               <!-- Slide 4 -->
               <div class="slide-item">
-                <h3>Batas Transform (Saling Berpapasan)</h3>
-                <p>Dua lempeng bergeser secara horizontal berlawanan arah. Pada batas ini tidak terjadi pembentukan maupun peleburan kerak bumi.</p>
-                <div class="highlight-box">
-                  <b>⚡ Pelepasan Energi Mendadak:</b> Gesekan kuat antarkedua blok batuan menahan pergerakan lempeng hingga tegangan melampaui batas elastisitas batuan, memicu gempa dangkal berdaya rusak tinggi.
-                </div>
+                <h3>Batas Divergen & Pemekaran Kerak Samudra</h3>
+                <p>Dua lempeng tektonik bergerak saling menjauh (<i>spreading</i>). Celah rekahan yang terbuka diisi lelehan magma astenosfer yang membeku membentuk kerak samudra baru:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">📍</span> <div><b>Contoh Dunia:</b> Sesar San Andreas di California (AS).</div></li>
-                  <li><span class="b-ic">🇮🇩</span> <div><b>Contoh Indonesia:</b> Sistem Sesar Besar Semangko di Sumatera, <b>Sesar Lembang</b> di Bandung, dan <b>Sesar Cimandiri</b> (Gempa Cianjur 2022).</div></li>
+                  <li><span class="b-ic">⛰️</span> <div><b>Mid-Oceanic Ridge:</b> Rantai pegunungan bawah laut terpanjang di bumi, seperti <i>Mid-Atlantic Ridge</i> di Samudra Atlantik.</div></li>
+                  <li><span class="b-ic">🏞️</span> <div><b>Lembah Retakan Benua:</b> Retakan di daratan benua yang mulai terbelah, seperti <i>East African Rift</i> di Afrika Timur.</div></li>
                 </ul>
+                <div class="highlight-box">
+                  <b>⚖️ Keseimbangan Kerak:</b> Pemekaran divergen mengimbangi volume kerak yang dileburkan kembali di zona subduksi.
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="slide-item">
+                <h3>Batas Transform & Sistem Sesar Geser</h3>
+                <p>Dua lempeng bergeser secara horizontal berpapasan (<i>strike-slip</i>). Tidak terjadi penambahan maupun peleburan kerak, namun menimbulkan gempa dangkal kuat:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">📍</span> <div><b>Contoh Dunia:</b> Sesar San Andreas (<i>San Andreas Fault</i>) di California, Amerika Serikat.</div></li>
+                  <li><span class="b-ic">🇮🇩</span> <div><b>Sesar Besar Sumatra (Sesar Semangko):</b> Sesar geser dekstral aktif sepanjang 1.900 km di Bukit Barisan.</div></li>
+                  <li><span class="b-ic">⚠️</span> <div><b>Sesar Darat Aktif di Indonesia:</b> Sesar Lembang (Bandung), Sesar Cimandiri &amp; Cugenang (Gempa Cianjur 2022), dan Sesar Palu-Koro (Gempa Palu 2018).</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Batas Transform</span><span>Sesar San Andreas</span><span>Sesar Semangko</span><span>Sesar Palu-Koro &amp; Lembang</span>
+                </div>
               </div>
             </div>
 
@@ -274,58 +366,106 @@
             <div class="slider-header">
               <div class="slider-top-meta">
                 <span class="slider-topic-tag">03 — Aktivitas Magmatik</span>
-                <span class="slider-step-count">Slide 1 dari 4</span>
+                <span class="slider-step-count">Slide 1 dari 7</span>
               </div>
               <div class="slider-stepper-track">
-                <div class="slider-stepper-fill" style="width:25%"></div>
+                <div class="slider-stepper-fill" style="width:14.3%"></div>
               </div>
             </div>
 
             <div class="slider-body">
               <!-- Slide 1 -->
               <div class="slide-item active">
-                <h3>Anatomi Internal Gunung Api</h3>
-                <p>Vulkanisme mencakup proses pergerakan magma dari dapur magma di kedalaman astenosfer/kerak bumi menuju permukaan.</p>
+                <h3>Anatomi Gunung Api & Genesis Magma</h3>
+                <p>Vulkanisme adalah peristiwa naiknya magma dari interior bumi menuju permukaan:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🔥</span> <div><b>Dapur Magma (Magma Chamber):</b> Ruang reservoir raksasa tempat magma berkumpul dan membangun tekanan hidrostatik gas.</div></li>
-                  <li><span class="b-ic">🧪</span> <div><b>Pipa Kepundan (Diatrema/Vent):</b> Saluran silindris utama tempat magma merambat naik menuju puncak.</div></li>
-                  <li><span class="b-ic">🌋</span> <div><b>Kawah (Crater):</b> Mulut letusan di puncak tempat keluarnya gas, lava, dan material piroklastik.</div></li>
+                  <li><span class="b-ic">🔥</span> <div><b>Dapur Magma (Magma Chamber):</b> Ruang reservoir di kedalaman kerak tempat magma berakumulasi.</div></li>
+                  <li><span class="b-ic">🧪</span> <div><b>Pipa Kepundan (Diatrema/Vent):</b> Saluran silindris vertikal tempat magma merambat naik ke puncak.</div></li>
+                  <li><span class="b-ic">🌋</span> <div><b>Kawah & Kaldera:</b> Kawah adalah lubang letusan; <b>Kaldera</b> adalah kawah raksasa akibat runtuhnya atap dapur magma yang kosong (Toba & Bromo).</div></li>
                 </ul>
-                <div class="chips">
-                  <span>Magma Chamber</span><span>Diatrema</span><span>Crater</span><span>Dike Lateral</span>
+                <div class="highlight-box">
+                  <b>🔬 Flux Melting:</b> Pelepasan fluida air lempeng subduksi ke <i>mantle wedge</i> menurunkan titik leleh mantel, memicu magma naik.
                 </div>
               </div>
 
               <!-- Slide 2 -->
               <div class="slide-item">
-                <h3>Intrusi Magma (Plutonisme)</h3>
-                <p>Banyak magma yang tidak mencapai permukaan, melainkan membeku di celah-celah batuan sedimen kerak bumi membentuk bentang alam intrusif:</p>
+                <h3>Bentukan Intrusi Magma (Plutonisme)</h3>
+                <p>Magma yang mendingin dan membeku di bawah permukaan bumi membentuk formasi batuan intrusif:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">➖</span> <div><b>Sill:</b> Magma yang menyusup dan membeku sejajar (horizontal) di antara dua lapisan batuan.</div></li>
-                  <li><span class="b-ic">🍄</span> <div><b>Lakolit:</b> Intrusi magma berbentuk kubah cembung yang melengkungkan lapisan batuan di atasnya.</div></li>
-                  <li><span class="b-ic">🧱</span> <div><b>Batolit:</b> Dapur magma purba berukuran raksasa (>100 km²) yang membeku di kedalaman kerak bumi.</div></li>
-                  <li><span class="b-ic">📐</span> <div><b>Dike (Retas):</b> Magma yang memotong lapisan batuan secara tegak lurus/diagonal.</div></li>
+                  <li><span class="b-ic">🧱</span> <div><b>Batolit:</b> Dapur magma purba berukuran raksasa (&gt;100 km²) yang membeku di kedalaman kerak bumi.</div></li>
+                  <li><span class="b-ic">🍄</span> <div><b>Lakolit &amp; Sill:</b> Lakolit membentuk kubah melengkung ke atas; Sill membeku mendatar sejajar lapisan batuan.</div></li>
+                  <li><span class="b-ic">📐</span> <div><b>Dike (Korok/Gang) &amp; Apolisa:</b> Dike memotong lapisan batuan tegak/miring; cabangnya yang lebih kecil disebut <b>Apolisa</b> (urat magma).</div></li>
+                  <li><span class="b-ic">🧪</span> <div><b>Diatrema:</b> Saluran pipa silindris penghubung dapur magma ke kepundan.</div></li>
                 </ul>
               </div>
 
               <!-- Slide 3 -->
               <div class="slide-item">
-                <h3>Tipe Erupsi: Efusif vs Eksplosif</h3>
-                <p>Dinamika letusan gunung api sangat dipengaruhi oleh kekentalan (viskositas) magma dan kadar gas terlarut di dalamnya:</p>
+                <h3>Material Erupsi: Gas, Cair &amp; Tefra Padat</h3>
+                <p>Material yang dikeluarkan gunung api saat fase erupsi terbagi dalam tiga wujud:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🟢</span> <div><b>Erupsi Efusif:</b> Magma <b>basaltik encer</b>, kandungan silika dan gas rendah. Magma keluar tenang mengalir sebagai lelehan lava pijar (contoh: Gunung Kilauea di Hawaii).</div></li>
-                  <li><span class="b-ic">🔴</span> <div><b>Erupsi Eksplosif:</b> Magma <b>andesitik kental</b> dengan tekanan gas tinggi. Gas yang terperangkap meledakkan sumbatan kawah secara dahsyat, menyemburkan awan panas dan abu vulkanik tinggi ke atmosfer.</div></li>
+                  <li><span class="b-ic">💨</span> <div><b>Gas (Emanasi/Fumarol):</b> Uap air (H<sub>2</sub>O), gas CO<sub>2</sub>, SO<sub>2</sub>, dan gas beracun H<sub>2</sub>S.</div></li>
+                  <li><span class="b-ic">🔥</span> <div><b>Cair (Lava &amp; Lahar):</b> Lava adalah magma di permukaan bumi; <b>Lahar dingin</b> bercampur air hujan, sedangkan <b>Lahar panas</b> bercampur air kawah.</div></li>
+                  <li><span class="b-ic">🪨</span> <div><b>Padat (Piroklastik/Tefra):</b> Abu/debu (&lt;2 mm), kerikil Lapili (2–64 mm), serta Bom dan Blok vulkanik (&gt;64 mm).</div></li>
                 </ul>
+                <div class="chips">
+                  <span>Gas Fumarol</span><span>Lava &amp; Lahar</span><span>Abu (&lt;2mm)</span><span>Lapili (2-64mm)</span><span>Bom (&gt;64mm)</span>
+                </div>
               </div>
 
               <!-- Slide 4 -->
               <div class="slide-item">
-                <h3>Gunung Api di Indonesia & Manfaatnya</h3>
-                <p>Indonesia memiliki lebih dari 127 gunung api aktif sebagai bagian dari Busur Vulkanik Sunda:</p>
+                <h3>Tipe Letusan Efusif vs Tipe Merapi</h3>
+                <p>Klasifikasi letusan Macdonald (1972) dipengaruhi viskositas magma dan tekanan gas:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">⚠️</span> <div><b>Bahaya Vulkanik:</b> Awan panas (<i>nuée ardente</i> pada Gunung Merapi), lahar dingin hujan lahar, tsunami letusan (Krakatau 1883), dan abu silika tajam.</div></li>
-                  <li><span class="b-ic">🌾</span> <div><b>Manfaat Ekologis:</b> Abu vulkanik kaya unsur hara (P, K, Ca) yang melapuk menjadi <b>tanah andosol subur</b> penopang pertanian pangan pulau Jawa, potensi energi panas bumi (geotermal), dan wisata alam.</div></li>
+                  <li><span class="b-ic">🟢</span> <div><b>Tipe Hawaii & Stromboli (Efusif):</b> Magma basaltik sangat encer mengalir tenang tanpa ledakan dahsyat (G. Kilauea Hawaii), atau semburan ritmik lava pijar (G. Stromboli).</div></li>
+                  <li><span class="b-ic">🟡</span> <div><b>Tipe Merapi:</b> Magma andesitik kental membeku di mulut kawah membentuk <b>kubah lava</b>. Ketidakstabilan gravitasi memicu keruntuhan kubah menjadi luncuran <b>awan panas guguran</b> (<i>nuée ardente / wedhus gembel</i>).</div></li>
                 </ul>
+                <div class="chips">
+                  <span>Erupsi Efusif</span><span>Lava Basaltik</span><span>Kubah Lava</span><span>Awan Panas Merapi</span>
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="slide-item">
+                <h3>Tipe Letusan Plinian & St. Vincent</h3>
+                <p>Karakteristik letusan katastrofik berdaya hancur tinggi:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🔴</span> <div><b>Tipe Plinian / Perret (Ultra-Eksplosif):</b> Tekanan gas ekstrem melontarkan tiang gas dan abu puluhan kilometer menembus stratosfer. Representasi dunia: <b>G. Krakatau 1883</b> dan <b>G. Tambora 1815</b> (memicu anomali global <i>"Year Without a Summer"</i>).</div></li>
+                  <li><span class="b-ic">🌊</span> <div><b>Tipe St. Vincent:</b> Erupsi eksplosif pada gunung berkawah danau; tumpahan jutaan m³ air kawah seketika menjadi banjir lahar letusan primer (<b>G. Kelud</b> Jawa Timur).</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Plinian (Tambora 1815)</span><span>Krakatau 1883</span><span>St. Vincent</span><span>G. Kelud</span>
+                </div>
+              </div>
+
+              <!-- Slide 6 -->
+              <div class="slide-item">
+                <h3>Tipe Letusan Vulkano & Pelee</h3>
+                <p>Dua tipe lain klasifikasi Macdonald (1972) yang dipengaruhi kekentalan magma:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">☁️</span> <div><b>Tipe Vulkano:</b> Erupsi eksplosif sedang hingga kuat; magma kental membeku di kawah lalu terlontar sebagai tiang abu mirip kembang kol (<b>G. Vulcano</b> Italia, <b>G. Bromo</b>).</div></li>
+                  <li><span class="b-ic">💥</span> <div><b>Tipe Pelee:</b> Magma silisik sangat kental menyumbat kawah (<i>spine</i>), lalu menyemburkan awan panas lateral (<i>nuée ardente d'explosion</i>) seperti <b>Mont Pelée</b> (Martinik, 1902).</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Vulkano (Bromo)</span><span>Pelee (Mont Pelée 1902)</span><span>Magma Kental</span>
+                </div>
+              </div>
+
+              <!-- Slide 7 -->
+              <div class="slide-item">
+                <h3>Batuan Beku & Manfaat Vulkanisme</h3>
+                <p>Pembekuan magma menghasilkan <b>Batuan Beku</b> yang menopang peradaban:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🏛️</span> <div><b>Granit (Plutonik):</b> Pembekuan lambat berbutir kasar di Bangka-Belitung untuk lantai dan ornamen.</div></li>
+                  <li><span class="b-ic">🛕</span> <div><b>Andesit & Basalt:</b> Andesit pembekuan cepat lava penyusun <b>Candi Borobudur</b>; Basalt penyusun kerak samudra.</div></li>
+                  <li><span class="b-ic">🌊</span> <div><b>Batu Apung (Pumice):</b> Pembekuan lava kaya gas berpori untuk beton ringan & abrasif.</div></li>
+                  <li><span class="b-ic">🌾</span> <div><b>Tanah Andosol & Panas Bumi:</b> Pelapukan abu vulkanik menghasilkan tanah andosol super subur, serta potensi energi geotermal.</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Granit Bangka</span><span>Andesit Borobudur</span><span>Batu Apung</span><span>Tanah Andosol</span>
+                </div>
               </div>
             </div>
 
@@ -355,59 +495,138 @@
             <div class="slider-header">
               <div class="slider-top-meta">
                 <span class="slider-topic-tag">04 — Geomorfologi</span>
-                <span class="slider-step-count">Slide 1 dari 4</span>
+                <span class="slider-step-count">Slide 1 dari 8</span>
               </div>
               <div class="slider-stepper-track">
-                <div class="slider-stepper-fill" style="width:25%"></div>
+                <div class="slider-stepper-fill" style="width:12.5%"></div>
               </div>
             </div>
 
             <div class="slider-body">
               <!-- Slide 1 -->
               <div class="slide-item active">
-                <h3>Endogen, Eksogen & Faktor Antropogenik</h3>
-                <p>Muka bumi bersifat dinamis dan terus berubah akibat interaksi dari kekuatan pembentuk dan perata relief:</p>
+                <h3>Dinamika Endogen: Epirogenesa & Orogenesa</h3>
+                <p>Relief bumi dibangun oleh tenaga endogen (<b>konstruktif</b>) melalui dua macam dinamika gerak tektonik:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">⛰️</span> <div><b>Tenaga Endogen (Konstruktif):</b> Berasal dari dalam bumi (tektonisme & vulkanisme), bertindak <b>membangun</b> relief tinggi, tonjolan, dan pegunungan.</div></li>
-                  <li><span class="b-ic">🌧️</span> <div><b>Tenaga Eksogen (Destruktif):</b> Berasal dari luar permukaan bumi (air, angin, cuaca, gletser), bertindak <b>meratakan</b> dan mengikis permukaan bumi.</div></li>
-                  <li><span class="b-ic">🚜</span> <div><b>Aktivitas Antropogenik:</b> Campur tangan manusia yang mempercepat laju perubahan geomorfologi bumi.</div></li>
+                  <li><span class="b-ic">🌐</span> <div><b>Gerak Epirogenesa:</b> Gerak vertikal benua lambat dan sangat luas:<br>
+                  • <i>Epirogenesa Positif:</i> Daratan turun seolah laut naik (Kepulauan Maluku).<br>
+                  • <i>Epirogenesa Negatif:</i> Daratan naik seolah laut turun (Pulau Timor).</div></li>
+                  <li><span class="b-ic">⛰️</span> <div><b>Gerak Orogenesa:</b> Proses pembentukan pegunungan relatif cepat pada busur sempit melalui pelipatan dan pematahan.</div></li>
                 </ul>
+                <div class="chips">
+                  <span>Tenaga Konstruktif</span><span>Epirogenesa Positif & Negatif</span><span>Orogenesa</span>
+                </div>
               </div>
 
               <!-- Slide 2 -->
               <div class="slide-item">
-                <h3>Deformasi Batuan: Lipatan (Fold)</h3>
-                <p>Ketika batuan sedimen yang elastis mendapat tekanan kompresi horizontal secara perlahan dari dua arah berlawanan, lapisan kerak membengkok tanpa patah:</p>
+                <h3>Deformasi Batuan: Lipatan (Fold) & Migas</h3>
+                <p>Kompresi mendatar perlahan membengkokkan lapisan batuan sedimen elastis tanpa patah:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">⛰️</span> <div><b>Antiklin:</b> Bagian puncak atau punggungan lipatan yang cembung ke atas (sering menjadi reservoir migas).</div></li>
-                  <li><span class="b-ic">🏞️</span> <div><b>Sinklin:</b> Bagian lembah lipatan yang cekung ke bawah.</div></li>
+                  <li><span class="b-ic">⛰️</span> <div><b>Antiklin:</b> Punggung lipatan yang cembung ke atas. Sering menjadi struktur perangkap (<i>trap</i>) fluida minyak dan gas bumi.</div></li>
+                  <li><span class="b-ic">🏞️</span> <div><b>Sinklin:</b> Lembah lipatan yang melengkung cekung ke bawah.</div></li>
                 </ul>
                 <div class="highlight-box">
-                  <b>🌍 Contoh Lapangan:</b> Pegunungan Lipatan Busur Sunda di Jawa Bagian Selatan, serta Pegunungan Himalaya di perbatasan India-Tibet.
+                  <b>🌍 Contoh Lapangan:</b> Antiklinorium Bogor, Zona Lipatan Pegunungan Kendeng, dan Pegunungan Himalaya.
                 </div>
               </div>
 
               <!-- Slide 3 -->
               <div class="slide-item">
-                <h3>Deformasi Batuan: Patahan (Fault), Horst & Graben</h3>
-                <p>Bila batuan bersifat kaku/getas atau tekanan berlangsung cepat, batuan akan retak dan bergeser posisinya (dislokasi):</p>
+                <h3>Deformasi Patahan: Horst & Graben (Sesar)</h3>
+                <p>Batuan melampaui batas elastisitas sehingga patah dan bergeser (dislokasi getas):</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">⬆️</span> <div><b>Horst:</b> Blok kerak bumi yang tetap tinggi atau terangkat di antara dua bidang patahan.</div></li>
-                  <li><span class="b-ic">⬇️</span> <div><b>Graben (Slank):</b> Blok kerak bumi yang anjlok atau turun ke bawah di antara dua patahan, membentuk lembah depresi terjal.</div></li>
+                  <li><span class="b-ic">⚡</span> <div><b>Anatomi Sesar:</b> Blok di atas bidang sesar disebut <b>Hanging Wall</b>, dan blok di bawahnya disebut <b>Footwall</b>.</div></li>
+                  <li><span class="b-ic">⬆️</span> <div><b>Horst:</b> Blok kerak bumi yang tetap tinggi di antara dua bidang sesar turun.</div></li>
+                  <li><span class="b-ic">⬇️</span> <div><b>Graben (Slank):</b> Blok yang amblas turun membentuk lembah depresi, seperti <b>Ngarai Sianok</b> di Bukittinggi (Sesar Semangko).</div></li>
                 </ul>
-                <div class="highlight-box">
-                  <b>🇮🇩 Contoh Indonesia:</b> Lembah <b>Ngarai Sianok</b> di Bukittinggi (Sumatera Barat) merupakan graben megah dari patahan aktif Sesar Semangko.
+                <div class="chips">
+                  <span>Hanging & Footwall</span><span>Horst</span><span>Graben (Slank)</span><span>Ngarai Sianok</span>
                 </div>
               </div>
 
               <!-- Slide 4 -->
               <div class="slide-item">
-                <h3>Eksogen & Antropogenik: Land Subsidence</h3>
-                <p>Proses permukaan dan aktivitas manusia secara nyata memengaruhi kelangsungan hidup lingkungan:</p>
+                <h3>Klasifikasi Sesar & Variasi Lipatan</h3>
+                <p>Arah gaya menentukan jenis sesar, sedangkan intensitas kompresi menentukan bentuk lipatan:</p>
                 <ul class="info-points">
-                  <li><span class="b-ic">🌊</span> <div><b>Sedimentasi Delta:</b> Pengendapan sedimen hasil erosi di muara sungai (contoh: <b>Delta Bengawan Solo</b> yang bertambah ke laut).</div></li>
-                  <li><span class="b-ic">🏢</span> <div><b>Penurunan Muka Tanah (Land Subsidence):</b> Di Jakarta dan pesisir utara Jawa, penyedotan air tanah berlebihan dan beban infrastruktur menyebabkan tanah amblas hingga 10–20 cm/tahun.</div></li>
+                  <li><span class="b-ic">↕️</span> <div><b>Sesar Turun (Normal):</b> <i>Hanging wall</i> turun akibat gaya regangan. <b>Sesar Naik (Reverse/Thrust):</b> <i>hanging wall</i> terdorong naik akibat kompresi.</div></li>
+                  <li><span class="b-ic">↔️</span> <div><b>Sesar Mendatar (Strike-Slip):</b> Blok bergeser lateral, dekstral atau sinistral. <b>Gawir Sesar:</b> tebing terjal hasil pergeseran vertikal bidang sesar.</div></li>
+                  <li><span class="b-ic">🌀</span> <div><b>Variasi Lipatan:</b> tegak, asimetris, miring, rebah, dan isoklinal.</div></li>
                 </ul>
+                <div class="chips">
+                  <span>Sesar Normal</span><span>Sesar Naik</span><span>Gawir Sesar</span><span>Lipatan Rebah</span>
+                </div>
+              </div>
+
+              <!-- Slide: Siklus Batuan -->
+              <div class="slide-item">
+                <h3>Siklus Batuan (Rock Cycle)</h3>
+                <p>Batuan beku, sedimen, dan metamorf saling berubah dalam siklus berkesinambungan:</p>
+                <svg class="rock-cycle" viewBox="0 0 420 190" role="img" aria-label="Diagram siklus batuan: magma, batuan beku, batuan sedimen, batuan metamorf">
+                  <defs><marker id="rc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4a5965"/></marker></defs>
+                  <g fill="none" stroke="#4a5965" stroke-width="2" marker-end="url(#rc-arrow)">
+                    <path d="M265 23 Q355 23 355 76"/>
+                    <path d="M355 108 Q355 163 267 163"/>
+                    <path d="M155 163 Q65 163 65 110"/>
+                    <path d="M65 76 Q65 23 153 23"/>
+                  </g>
+                  <g font-size="12" font-weight="800" text-anchor="middle">
+                    <rect x="155" y="8" width="110" height="30" rx="8" fill="#e4572e"/><text x="210" y="28" fill="#fff">Magma</text>
+                    <rect x="300" y="78" width="110" height="30" rx="8" fill="#0e2a3a"/><text x="355" y="98" fill="#fff">Batuan Beku</text>
+                    <rect x="155" y="148" width="110" height="30" rx="8" fill="#f7c948"/><text x="210" y="168" fill="#2b1d05">Batuan Sedimen</text>
+                    <rect x="10" y="78" width="110" height="30" rx="8" fill="#7a5aa0"/><text x="65" y="98" fill="#fff">Batuan Metamorf</text>
+                  </g>
+                  <g font-size="10.5" font-weight="700" fill="#4a5965">
+                    <text x="300" y="46">Pembekuan</text>
+                    <text x="285" y="186">Pelapukan, erosi, litifikasi</text>
+                    <text x="14" y="140">Tekanan &amp; suhu</text>
+                    <text x="14" y="46">Pelelehan</text>
+                  </g>
+                </svg>
+                <div class="highlight-box">
+                  <b>🔄 Jalur silang:</b> batuan beku dan sedimen juga dapat langsung menjadi metamorf, dan batuan apa pun dapat melebur kembali menjadi magma.
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="slide-item">
+                <h3>Siklus Batuan Sedimen & Pemanfaatannya</h3>
+                <p>Akumulasi fragmen batuan terlapukkan yang mengalami kompaksi dan sementasi (litifikasi):</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🪨</span> <div><b>Batu Gamping (CaCO<sub>3</sub>):</b> Karst Pegunungan Sewu & Maros dari koral purba; bahan klinker semen dan kapur pertanian.</div></li>
+                  <li><span class="b-ic">🏖️</span> <div><b>Batu Pasir:</b> Sementasi butir kuarsa untuk material konstruksi dan dinding ekspos.</div></li>
+                  <li><span class="b-ic">⛏️</span> <div><b>Batu Bara:</b> Pembatubaraan gambut purba jutaan tahun (Tanjung Enim & Kaltim) untuk bahan bakar termal PLTU dan industri baja.</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Batu Gamping Karst</span><span>Batu Pasir</span><span>Batu Bara Tanjung Enim</span>
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="slide-item">
+                <h3>Siklus Batuan Metamorf (Malihan)</h3>
+                <p>Transformasi padat batuan akibat pengaruh suhu tinggi, tekanan kuat, atau fluida hidrotermal:</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">💎</span> <div><b>Marmer:</b> Rekristalisasi batu gamping oleh tekanan (<i>P</i>) dan temperatur (<i>T</i>) tinggi. Sentra Campurdarat, Tulungagung (Jawa Timur) untuk pelat lantai mewah dan seni pahat patung.</div></li>
+                  <li><span class="b-ic">🪓</span> <div><b>Batu Sabak (Slate):</b> Metamorfisme serpih lempung, berlembar tipis tahan asam untuk genteng batu dan meja biliar.</div></li>
+                </ul>
+                <div class="highlight-box">
+                  <b>🔄 Siklus Lengkap:</b> Batuan sedimen dan metamorf yang terbenam ke perut bumi akan melebur kembali menjadi magma baru.
+                </div>
+              </div>
+
+              <!-- Slide 6 -->
+              <div class="slide-item">
+                <h3>Tenaga Eksogen & Amblesan Antropogenik</h3>
+                <p>Perombakan permukaan bumi oleh faktor eksogen dan percepatan aktivitas manusia (<b>antropogenik</b>):</p>
+                <ul class="info-points">
+                  <li><span class="b-ic">🌊</span> <div><b>Sedimentasi Delta:</b> Pengendapan sedimen sungai di muara laut, seperti progradasi <b>Delta Bengawan Solo</b> ke Laut Jawa.</div></li>
+                  <li><span class="b-ic">🏙️</span> <div><b>Land Subsidence (5–15 cm/tahun):</b> Penurunan muka tanah di Jakarta dan Semarang yang dipicu <b>ekstraksi air tanah berlebihan</b> dan beban infrastruktur kota.</div></li>
+                </ul>
+                <div class="chips">
+                  <span>Delta Bengawan Solo</span><span>Land Subsidence Jakarta</span><span>Faktor Antropogenik</span>
+                </div>
               </div>
             </div>
 
@@ -420,10 +639,7 @@
       </section>
 
       <!-- ============ HALAMAN: KUIS ============ -->
-      <section class="page" id="page-kuis">
-        <span class="sec-tag">05 — Evaluasi Pembelajaran</span>
-        <h2 class="sec-title">Kuis Interaktif</h2>
-        <p class="sec-sub">Uji pemahamanmu! Beberapa soal dilengkapi gambar. Di akhir kuis kamu akan melihat skor serta jumlah jawaban benar dan salah.</p>
+      <section class="page fit-view" id="page-kuis">
         <div class="quiz-box">
           <div id="q-body"></div>
           <div id="q-result" style="display:none"></div>
@@ -433,6 +649,26 @@
     </div>
   </main>
 </div>
+
+<dialog id="refs" aria-labelledby="refs-title">
+  <div class="refs-head">
+    <h3 id="refs-title">📚 Referensi Literatur</h3>
+    <button type="button" class="refs-close" aria-label="Tutup referensi">✕</button>
+  </div>
+  <ul class="refs-list">
+    <li>Ashari, A. (2023). <i>Bentanglahan Vulkanik Indonesia</i>. <small>Bab C</small></li>
+    <li>Bronto, S. (2013). <i>Geologi Gunung Api Purba</i>. Bandung: Badan Geologi, Kementerian ESDM. <small>Bab C</small></li>
+    <li>Graha, D. S. (1987). <i>Batuan dan Mineral</i>. Bandung: Penerbit Nova. <small>Bab D</small></li>
+    <li>Macdonald, G. A. (1972). <i>Volcanoes</i>. Englewood Cliffs, N.J.: Prentice-Hall. <small>Bab C</small></li>
+    <li>Noor, D. <i>Geomorfologi</i>. Yogyakarta: Deepublish. <small>Bab A, B</small></li>
+    <li>Noor, D. (2012). <i>Pengantar Geologi</i>. Bogor: Fakultas Teknik Geologi, Universitas Pakuan. <small>Bab D</small></li>
+    <li>Sutikno, Dibyosaputro, S., & Haryono, E. <i>Geomorfologi Dasar</i>. Yogyakarta: Gadjah Mada University Press. <small>Bab E</small></li>
+    <li>Tarbuck, E. J., & Lutgens, F. K. (2014). <i>Earth: An Introduction to Physical Geology</i> (11th ed.). Boston: Pearson. <small>Bab A, B, C, D</small></li>
+    <li>Thornbury, W. D. (1969). <i>Principles of Geomorphology</i> (2nd ed.). New York: John Wiley & Sons. <small>Bab E</small></li>
+    <li>Van Zuidam, R. A. (1985). <i>Aerial Photo-Interpretation in Terrain Analysis and Geomorphologic Mapping</i>. The Hague: Smith Publisher/ITC. <small>Bab E</small></li>
+    <li>Verstappen, H. Th. (1983). <i>Applied Geomorphology: Geomorphological Surveys for Environmental Development</i>. Amsterdam: Elsevier. <small>Bab E</small></li>
+  </ul>
+</dialog>
 
 <script src="assets/js/main.js"></script>
 </body>
