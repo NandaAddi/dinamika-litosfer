@@ -83,9 +83,7 @@ main{flex:1;min-width:0;display:flex;flex-direction:column}
 
 .material-split{position:relative;z-index:1;flex:1;min-height:0;display:grid;grid-template-columns:1.08fr .92fr;gap:20px;height:100%;box-sizing:border-box}
 .model-frame-card{height:100%;min-height:0;background:#091b26;border-radius:20px;border:2px solid rgba(255,255,255,.2);box-shadow:0 12px 36px rgba(0,0,0,.35);position:relative;overflow:hidden;display:flex;flex-direction:column}
-.model-frame-card iframe{width:100%;height:100%;border:none;flex:1;display:block}
 .model-badge{position:absolute;top:12px;left:12px;background:rgba(14,42,58,.88);backdrop-filter:blur(8px);color:var(--sun);font-size:.82rem;font-weight:800;padding:6px 14px;border-radius:999px;border:1px solid rgba(247,201,72,.35);display:flex;align-items:center;gap:7px;z-index:2;pointer-events:none}
-.model-author-bar{position:absolute;bottom:10px;right:14px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);color:#a8c0d0;font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:6px;z-index:2;pointer-events:none}
 
 .slider-frame-card{height:100%;min-height:0;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-radius:20px;border:2px solid rgba(255,255,255,.45);box-shadow:0 12px 36px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.15);display:flex;flex-direction:column;box-sizing:border-box;padding:22px 24px;overflow:hidden}
 .slider-header{flex:none;margin-bottom:10px}
@@ -379,3 +377,200 @@ dialog#refs::backdrop{background:rgba(7,23,32,.7)}
 
 /* Diagram siklus batuan */
 .rock-cycle{width:100%;height:auto;max-height:170px;display:block;margin:0 auto 10px}
+
+/* ================= MODUL 1: 3D INTERAKTIF STRUKTUR BUMI ================= */
+.earth3d-stage{
+  position:relative;
+  flex:1;
+  width:100%;
+  height:100%;
+  min-height:0;
+  background:radial-gradient(circle at 50% 44%, #16384e 0%, #091b26 62%, #050e15 100%);
+  overflow:hidden;
+  user-select:none;
+}
+.earth3d-gl,.earth3d-hud{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.earth3d-hud{
+  cursor:grab;
+  z-index:1;
+}
+.earth3d-hud:active{
+  cursor:grabbing;
+}
+.earth3d-sim-banner{
+  position:absolute;
+  top:48px;
+  left:12px;
+  right:12px;
+  z-index:2;
+  pointer-events:none;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  background:rgba(9,27,38,.76);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.12);
+  border-left:3.5px solid var(--sun);
+  border-radius:10px;
+  padding:7px 12px;
+}
+.earth3d-sim-banner .sim-title{
+  font-size:.8rem;
+  color:var(--sun);
+  line-height:1.25;
+}
+.earth3d-sim-banner .sim-sub{
+  font-size:.74rem;
+  color:#c8dce8;
+  line-height:1.35;
+}
+.earth3d-layer-popup{
+  position:absolute;
+  left:12px;
+  bottom:86px;
+  width:min(310px,calc(100% - 24px));
+  z-index:4;
+  background:rgba(9,25,36,.94);
+  backdrop-filter:blur(12px);
+  border:1.5px solid rgba(247,201,72,.45);
+  border-radius:14px;
+  padding:11px 13px;
+  color:#fff;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+  animation:slideFade .18s ease;
+}
+.earth3d-layer-popup .lp-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:7px;
+}
+.earth3d-layer-popup .lp-dot{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  flex:none;
+  box-shadow:0 0 8px currentColor;
+}
+.earth3d-layer-popup .lp-name{
+  font-size:.88rem;
+  color:var(--sun);
+  flex:1;
+}
+.earth3d-layer-popup .lp-close{
+  background:rgba(255,255,255,.1);
+  border:none;
+  color:#cbe0ec;
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  font-size:.74rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.earth3d-layer-popup .lp-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px 10px;
+  margin-bottom:7px;
+}
+.earth3d-layer-popup .lp-grid small{
+  display:block;
+  font-size:.66rem;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:#89a7ba;
+}
+.earth3d-layer-popup .lp-grid b{
+  font-size:.76rem;
+  color:#eef6fa;
+}
+.earth3d-layer-popup .lp-comp{
+  font-size:.74rem;
+  color:#b9d3e3;
+  background:rgba(255,255,255,.06);
+  padding:5px 8px;
+  border-radius:7px;
+  line-height:1.35;
+}
+.earth3d-bottom-bar{
+  position:absolute;
+  left:10px;
+  right:10px;
+  bottom:10px;
+  z-index:3;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.earth3d-layer-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+  justify-content:center;
+}
+.e3d-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  background:rgba(9,27,38,.84);
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.18);
+  color:#d4e4ee;
+  font-size:.72rem;
+  font-weight:700;
+  padding:4px 9px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .14s;
+}
+.e3d-pill i{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  display:inline-block;
+}
+.e3d-pill:hover{
+  border-color:var(--sun);
+  color:#fff;
+  transform:translateY(-1px);
+}
+.e3d-pill.active{
+  background:var(--sun);
+  color:#1c1404;
+  border-color:var(--sun);
+  font-weight:800;
+}
+.earth3d-ctrls{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.e3d-ctrl-btn{
+  background:rgba(14,42,58,.9);
+  border:1.5px solid rgba(255,255,255,.22);
+  color:#e3eff6;
+  font-size:.74rem;
+  font-weight:800;
+  padding:5px 11px;
+  border-radius:10px;
+  cursor:pointer;
+  box-shadow:0 2px 0 rgba(0,0,0,.35);
+  transition:all .12s;
+}
+.e3d-ctrl-btn:hover{
+  border-color:var(--sun);
+  color:#fff;
+}
+.e3d-ctrl-btn.active{
+  background:rgba(228,87,46,.9);
+  border-color:#ff8a65;
+  color:#fff;
+}

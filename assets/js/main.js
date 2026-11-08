@@ -41,6 +41,11 @@ function initSliders(){
           btnNext.innerHTML='Berikutnya →';
         }
       }
+      const pageEl=split.closest('.page');
+      if(pageEl&&window.earth3DViewers){
+        const pid=pageEl.id.replace('page-','');
+        if(window.earth3DViewers[pid])window.earth3DViewers[pid].onSlideChange(currentSlide);
+      }
     }
 
     if(btnPrev){
