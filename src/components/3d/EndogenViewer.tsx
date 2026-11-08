@@ -4,15 +4,17 @@ import { Endogen3DViewer as EndogenEngine } from '../../engines/endogen/Endogen3
 interface EndogenViewerProps {
   slideIndex?: number;
   isActive?: boolean;
+  onInspect?: (target: { type: 'layer' | 'part' | 'action'; id?: number | string; name?: string; action?: string; state?: any }) => void;
 }
 
-export const EndogenViewer: React.FC<EndogenViewerProps> = ({ slideIndex = 0, isActive = true }) => {
+export const EndogenViewer: React.FC<EndogenViewerProps> = ({ slideIndex = 0, isActive = true, onInspect }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const viewer = new EndogenEngine(containerRef.current);
+    if (onInspect) (viewer as any).onInspect = onInspect;
     viewerRef.current = viewer;
 
     return () => {
@@ -20,6 +22,12 @@ export const EndogenViewer: React.FC<EndogenViewerProps> = ({ slideIndex = 0, is
       viewerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (viewerRef.current) {
+      (viewerRef.current as any).onInspect = onInspect;
+    }
+  }, [onInspect]);
 
   useEffect(() => {
     if (viewerRef.current) {

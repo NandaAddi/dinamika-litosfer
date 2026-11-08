@@ -1,5 +1,8 @@
 import React from 'react';
 import { Slide } from '../../types';
+import { sound } from '../../utils/soundEffects';
+import { InquiryChallenge } from '../../data/inquiryChallenges';
+import { InquiryGateCard } from './InquiryGateCard';
 
 interface SliderContainerProps {
   topicTag: string;
@@ -9,6 +12,9 @@ interface SliderContainerProps {
   nextCtaLabel?: string;
   onNextCta?: () => void;
   isEndogenRockCycle?: boolean;
+  inquiryChallenge?: InquiryChallenge | null;
+  isInquiryCompleted?: boolean;
+  onBypassInquiry?: () => void;
 }
 
 export const SliderContainer: React.FC<SliderContainerProps> = ({
@@ -17,7 +23,10 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
   currentSlide,
   onSlideChange,
   nextCtaLabel = 'Berikutnya →',
-  onNextCta
+  onNextCta,
+  inquiryChallenge,
+  isInquiryCompleted = true,
+  onBypassInquiry
 }) => {
   const total = slides ? slides.length : 0;
   const safeIdx = total > 0 ? Math.max(0, Math.min(total - 1, currentSlide)) : 0;
@@ -32,17 +41,22 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
   const isFirst = safeIdx === 0;
   const isLast = safeIdx === total - 1;
   const progressPct = total > 0 ? ((safeIdx + 1) / total) * 100 : 0;
+  const isChallengeActive = !!(inquiryChallenge && inquiryChallenge.targetSlide === safeIdx);
+  const isLocked = isChallengeActive && !isInquiryCompleted;
 
   const handlePrev = () => {
     if (!isFirst) {
+      sound.slideWhoosh();
       onSlideChange(safeIdx - 1);
     }
   };
 
   const handleNext = () => {
     if (!isLast) {
+      sound.slideWhoosh();
       onSlideChange(safeIdx + 1);
     } else if (onNextCta) {
+      sound.snap();
       onNextCta();
     }
   };
@@ -65,6 +79,15 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
         <div className="slide-item active">
           <h3>{slide.title}</h3>
           <p>{slide.desc}</p>
+
+          {/* Gerbang Inkuiri 3D Interaktif jika slide ini memiliki misi kebumian */}
+          {isChallengeActive && inquiryChallenge && (
+            <InquiryGateCard
+              challenge={inquiryChallenge}
+              isCompleted={!isLocked}
+              onBypass={onBypassInquiry || (() => {})}
+            />
+          )}
 
           {slide.points && slide.points.length > 0 && (
             <ul className="info-points">
@@ -171,10 +194,16 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
         </button>
         <button
           type="button"
-          className="btn btn-magma btn-next-slide"
+          className={`btn ${isLocked ? 'btn-outline inquiry-locked' : 'btn-magma'} btn-next-slide`}
           onClick={handleNext}
+          disabled={isLocked}
+          title={isLocked ? 'Selesaikan investigasi 3D di sebelah kiri untuk membuka materi' : undefined}
         >
-          {isLast ? nextCtaLabel : 'Berikutnya →'}
+          {isLocked
+            ? '🔒 Selesaikan Misi Inkuiri'
+            : isLast
+            ? nextCtaLabel
+            : 'Berikutnya →'}
         </button>
       </div>
     </div>

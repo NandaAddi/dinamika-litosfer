@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { QUIZ_QUESTIONS } from '../data/quiz';
+import { sound } from '../utils/soundEffects';
+import { progressStore } from '../data/progressStore';
 
 interface QuizPageProps {
   isActive?: boolean;
+  onOpenCertificate?: () => void;
+  onOpenBadges?: () => void;
 }
 
 const STORAGE_KEY = 'dinamika_litosfer_quiz_v1';
 
-export const QuizPage: React.FC<QuizPageProps> = ({ isActive = true }) => {
+export const QuizPage: React.FC<QuizPageProps> = ({
+  isActive = true,
+  onOpenCertificate,
+  onOpenBadges
+}) => {
   const [currentIdx, setCurrentIdx] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -91,11 +99,15 @@ export const QuizPage: React.FC<QuizPageProps> = ({ isActive = true }) => {
 
     const isCorrect = idx === currentQ.answer;
     if (isCorrect) {
+      sound.quizCorrect();
       setScore((prev) => prev + 1);
+    } else {
+      sound.quizWrong();
     }
   };
 
   const handleNext = () => {
+    sound.snap();
     if (currentIdx < totalQuestions - 1) {
       setCurrentIdx((prev) => prev + 1);
       setSelectedOpt(null);
@@ -103,7 +115,9 @@ export const QuizPage: React.FC<QuizPageProps> = ({ isActive = true }) => {
     } else {
       setIsFinished(true);
       const pct = Math.round((score / totalQuestions) * 100);
+      progressStore.saveQuizScore(score, totalQuestions);
       if (pct >= 80) {
+        sound.quizFinish();
         try {
           confetti({
             particleCount: 100,
@@ -116,6 +130,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ isActive = true }) => {
   };
 
   const handleReset = () => {
+    sound.snap();
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
@@ -246,9 +261,35 @@ export const QuizPage: React.FC<QuizPageProps> = ({ isActive = true }) => {
                 : 'Ayo pelajari kembali materi slide di setiap modul, lalu coba kuis ini lagi!'}
             </p>
 
-            <button type="button" className="btn btn-magma" onClick={handleReset}>
-              ↻ Ulangi Kuis
-            </button>
+            <div className="quiz-result-cta-row">
+              {onOpenCertificate && (
+                <button
+                  type="button"
+                  className="btn btn-magma btn-cert-cta"
+                  onClick={() => {
+                    sound.snap();
+                    onOpenCertificate();
+                  }}
+                >
+                  📄 Cetak / Simpan Portofolio Belajar (A4 PDF)
+                </button>
+              )}
+              {onOpenBadges && (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    sound.snap();
+                    onOpenBadges();
+                  }}
+                >
+                  🏅 Lihat Lencana Prestasi
+                </button>
+              )}
+              <button type="button" className="btn btn-outline" onClick={handleReset}>
+                ↻ Ulangi Kuis
+              </button>
+            </div>
           </div>
         )}
       </div>

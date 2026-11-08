@@ -4,15 +4,17 @@ import { Tectonic3DViewer as TectonicEngine } from '../../engines/tectonic/Tecto
 interface TectonicViewerProps {
   slideIndex?: number;
   isActive?: boolean;
+  onInspect?: (target: { type: 'layer' | 'part' | 'action'; id?: number | string; name?: string; action?: string; state?: any }) => void;
 }
 
-export const TectonicViewer: React.FC<TectonicViewerProps> = ({ slideIndex = 0, isActive = true }) => {
+export const TectonicViewer: React.FC<TectonicViewerProps> = ({ slideIndex = 0, isActive = true, onInspect }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const viewer = new TectonicEngine(containerRef.current, 'lempeng');
+    if (onInspect) (viewer as any).onInspect = onInspect;
     viewerRef.current = viewer;
 
     return () => {
@@ -20,6 +22,12 @@ export const TectonicViewer: React.FC<TectonicViewerProps> = ({ slideIndex = 0, 
       viewerRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (viewerRef.current) {
+      (viewerRef.current as any).onInspect = onInspect;
+    }
+  }, [onInspect]);
 
   useEffect(() => {
     if (viewerRef.current) {

@@ -1,0 +1,33 @@
+{
+  "name": "Dinamika Litosfer — Geografi 3D WebGL (UM)",
+  "short_name": "Dinamika Litosfer",
+  "description": "Media Pembelajaran Interaktif Geografi SMA/MA Berbasis 3D WebGL Photorealistic — Universitas Negeri Malang",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#171721",
+  "theme_color": "#5266eb",
+  "orientation": "any",
+  "lang": "id",
+  "categories": ["education", "geography", "science"],
+  "icons": [
+    {
+      "src": "/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/Lambang-UM.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/images/Lambang-UM.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "maskable"
+    }
+  ]
+}

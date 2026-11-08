@@ -7,6 +7,7 @@ interface EarthViewerProps {
   badgeTitle?: string;
   isActive?: boolean;
   variant?: 'card' | 'embedded';
+  onInspect?: (target: { type: 'layer' | 'part' | 'action'; id?: number | string; name?: string; action?: string; state?: any }) => void;
 }
 
 export const EarthViewer: React.FC<EarthViewerProps> = ({
@@ -14,7 +15,8 @@ export const EarthViewer: React.FC<EarthViewerProps> = ({
   pageId = 'struktur',
   badgeTitle = '3D Interaktif · Struktur Lapisan Bumi',
   isActive = true,
-  variant = 'card'
+  variant = 'card',
+  onInspect
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
@@ -22,6 +24,7 @@ export const EarthViewer: React.FC<EarthViewerProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
     const viewer = new EarthEngine(containerRef.current, pageId);
+    if (onInspect) (viewer as any).onInspect = onInspect;
     viewerRef.current = viewer;
 
     return () => {
@@ -29,6 +32,12 @@ export const EarthViewer: React.FC<EarthViewerProps> = ({
       viewerRef.current = null;
     };
   }, [pageId]);
+
+  useEffect(() => {
+    if (viewerRef.current) {
+      (viewerRef.current as any).onInspect = onInspect;
+    }
+  }, [onInspect]);
 
   useEffect(() => {
     if (viewerRef.current) {

@@ -1570,6 +1570,9 @@
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
             btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            if (typeof this.onInspect === 'function') {
+              this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
+            }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
             btn.classList.toggle('active', this.showLabels);
@@ -1613,6 +1616,10 @@
       this.wrap.querySelectorAll('.e3d-pill').forEach((btn, i) => {
         btn.classList.toggle('active', i === partIdx);
       });
+
+      if (typeof this.onInspect === 'function' && partIdx !== null && partIdx !== undefined) {
+        this.onInspect({ type: 'part', id: partIdx, name: PART_DATA[partIdx]?.name });
+      }
 
       if (partIdx === null || partIdx === undefined) {
         this.popupEl.style.display = 'none';

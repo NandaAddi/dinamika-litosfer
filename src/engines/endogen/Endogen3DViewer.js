@@ -1432,6 +1432,9 @@
           } else if (action === 'explode') {
             this.exploded = !this.exploded;
             btn.classList.toggle('active', this.exploded);
+            if (typeof this.onInspect === 'function') {
+              this.onInspect({ type: 'action', action: 'explode', state: this.exploded });
+            }
           } else if (action === 'labels') {
             this.showLabels = !this.showLabels;
             btn.classList.toggle('active', this.showLabels);
@@ -1467,6 +1470,10 @@
       this.wrap.querySelectorAll('.e3d-pill').forEach(btn => {
         btn.classList.toggle('active', Number(btn.dataset.part) === index);
       });
+
+      if (typeof this.onInspect === 'function' && index >= 0 && index < PART_DATA.length) {
+        this.onInspect({ type: 'part', id: index, name: PART_DATA[index]?.name });
+      }
 
       if (index < 0 || index >= PART_DATA.length) {
         this.popupEl.style.display = 'none';

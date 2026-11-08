@@ -1136,6 +1136,16 @@
       this.simTime = 0;
       this.lastFrameTime = performance.now();
 
+      // Sandbox Magma Physics State (Opsi C)
+      this.sandboxActive = false;
+      this.sandboxParams = {
+        silica: 58,
+        gas: 3.8,
+        regime: 'vulcanian_semeru',
+        isErupting: false,
+        eruptStartTime: 0
+      };
+
       this.buildDOM();
       this.initWebGL();
       this.bindEvents();
@@ -1443,6 +1453,9 @@
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
             btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            if (typeof this.onInspect === 'function') {
+              this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
+            }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
             btn.classList.toggle('active', this.showLabels);
@@ -1487,6 +1500,10 @@
         btn.classList.toggle('active', i === partIdx);
       });
 
+      if (typeof this.onInspect === 'function' && partIdx !== null && partIdx !== undefined) {
+        this.onInspect({ type: 'part', id: partIdx, name: PART_DATA[partIdx]?.name });
+      }
+
       if (partIdx === null || partIdx === undefined) {
         this.popupEl.style.display = 'none';
         return;
@@ -1524,6 +1541,29 @@
         this.selectPart(mode.focusPart);
       } else {
         this.selectPart(null);
+      }
+    }
+
+    setSandboxParams(params) {
+      if (!params) return;
+      this.sandboxParams = { ...this.sandboxParams, ...params };
+    }
+
+    triggerSandboxEruption() {
+      this.sandboxParams.isErupting = true;
+      this.sandboxParams.eruptStartTime = this.simTime;
+    }
+
+    toggleSandboxMode(active) {
+      this.sandboxActive = !!active;
+      if (this.sandboxActive) {
+        this.targetYaw = 0.62;
+        this.targetPitch = 0.28;
+        this.targetZoom = 1.0;
+        if (this.simTitleEl) this.simTitleEl.textContent = '🧪 Laboratorium Fisika Magma Semeru';
+        if (this.simSubEl) this.simSubEl.textContent = 'Simulasi real-time interaksi kadar silika (SiO2), viskositas, dan tekanan gas terhadap tipe erupsi.';
+      } else {
+        this.onSlideChange(this.slideIndex);
       }
     }
 
@@ -1712,6 +1752,13 @@
       ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
+      if (this.sandboxActive) {
+        this.drawSandboxSimulationHUD(ctx, mvp, w, h);
+        this.drawPartLabels3D(ctx, mvp, w, h);
+        ctx.restore();
+        return;
+      }
+
       const mode = SLIDE_MODES[this.slideIndex].id;
 
       // Animasi Erupsi & Partikel 3D Spesifik Slide pada Gunung Semeru
@@ -1732,6 +1779,132 @@
       }
 
       this.drawPartLabels3D(ctx, mvp, w, h);
+      ctx.restore();
+    }
+
+    // Simulasi Sandbox Fisika Magma Semeru (Opsi C: Efusif, Stromboli, Vulkano, Plinian)
+    drawSandboxSimulationHUD(ctx, mvp, w, h) {
+      const { regime, silica, gas } = this.sandboxParams;
+      const topAlpha = this.getVisibilityAlpha([0, 0.6, 0], [0, 0.92, 0.38]);
+      if (topAlpha < 0.05) return;
+
+      ctx.save();
+      ctx.globalAlpha = topAlpha;
+
+      if (regime === 'hawaii') {
+        // Rezim 1: Efusif Tenang - Aliran sungai lava pijar menuruni Besuk Kobokan
+        const phiFlow = 1.85;
+        for (let i = 0; i < 16; i++) {
+          const t = ((this.simTime * 0.25 + i / 16) % 1.0);
+          const r = 0.06 + t * 0.94;
+          const y = evalSemeruHeight(r, phiFlow) + 0.035;
+          const x = r * Math.cos(phiFlow);
+          const z = r * Math.sin(phiFlow);
+          const p = projectPoint3D([x, y, z], mvp, w, h);
+          if (p) {
+            const rad = (6 + t * 14) * this.zoom;
+            const grad = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, rad);
+            grad.addColorStop(0, '#fff3b0');
+            grad.addColorStop(0.3, '#ff922b');
+            grad.addColorStop(0.7, '#c93b1e');
+            grad.addColorStop(1, 'rgba(201, 59, 30, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.25, 'rgba(220, 230, 240, 0.35)');
+
+        const lavaPt = projectPoint3D([-0.18, 0.14, 0.65], mvp, w, h);
+        if (lavaPt) {
+          this.drawPillTag(ctx, lavaPt.x, lavaPt.y, '🌊 Lelehan Lava Basaltik Encer (Efusif Kilauea)', 'rgba(9, 27, 38, 0.92)', '#ff922b');
+        }
+      } else if (regime === 'stromboli') {
+        // Rezim 2: Stromboli - Air mancur lava pijar & bom vulkanik melontar ke udara
+        this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.45, 'rgba(180, 195, 205, 0.45)');
+        const trajectories = [
+          { vx: 0.35, vz: 0.18, vy: 0.72 },
+          { vx: -0.32, vz: 0.35, vy: 0.78 },
+          { vx: 0.18, vz: -0.38, vy: 0.75 },
+          { vx: -0.38, vz: -0.22, vy: 0.68 },
+          { vx: 0.05, vz: 0.05, vy: 0.88 },
+          { vx: 0.28, vz: 0.30, vy: 0.70 }
+        ];
+        trajectories.forEach((tr, idx) => {
+          const t = ((this.simTime * 0.95 + idx * 0.16) % 1.0);
+          const x = 0.025 + tr.vx * t;
+          const z = 0.032 + tr.vz * t;
+          const y = 0.56 + tr.vy * t - 1.15 * t * t;
+          const p = projectPoint3D([x, y, z], mvp, w, h);
+          if (p) {
+            ctx.fillStyle = '#ff5a36';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, (4 + (1 - t) * 3) * this.zoom, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff099';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        });
+        const stPt = projectPoint3D([0.025, 0.88, 0.032], mvp, w, h);
+        if (stPt) {
+          this.drawPillTag(ctx, stPt.x, stPt.y, '🎆 Air Mancur Lava Pijar & Bom Vulkanik', 'rgba(9, 27, 38, 0.92)', '#f7c948');
+        }
+      } else if (regime === 'plinian') {
+        // Rezim 4: Plinian - Kolom stratosferik kolosal dengan payung awan raksasa
+        const columnHeight = 1.15;
+        for (let i = 0; i < 24; i++) {
+          const t = ((this.simTime * 0.9 + i / 24) % 1.0);
+          const y = 0.56 + t * columnHeight;
+          const spread = t > 0.55 ? Math.pow((t - 0.55) / 0.45, 1.3) * 0.85 : t * 0.06;
+          const ang = i * 1.8 + this.simTime * 1.2;
+          const p = projectPoint3D([0.025 + Math.cos(ang) * spread, y, 0.032 + Math.sin(ang) * spread], mvp, w, h);
+          if (p) {
+            const rad = (14 + t * 44) * this.zoom;
+            const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
+            grad.addColorStop(0, t < 0.2 ? 'rgba(255, 120, 40, 0.9)' : 'rgba(110, 102, 98, 0.85)');
+            grad.addColorStop(0.6, 'rgba(75, 70, 68, 0.65)');
+            grad.addColorStop(1, 'rgba(50, 48, 46, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        const plinPt = projectPoint3D([0.025, 1.45, 0.032], mvp, w, h);
+        if (plinPt) {
+          this.drawPillTag(ctx, plinPt.x, plinPt.y, '💥 Kolom Abu Stratosferik (>25 km) & Payung Awan', 'rgba(9, 27, 38, 0.94)', '#ff5a36');
+        }
+      } else {
+        // Rezim 3: Vulkano & Semeru - Kubah lava Jonggring Saloko + awan panas guguran (APG) Besuk Kobokan
+        this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.65, 'rgba(150, 142, 138, 0.75)');
+        const phiFlow = 1.85;
+        for (let i = 0; i < 15; i++) {
+          const t = ((this.simTime * 0.7 + i / 15) % 1.0);
+          const r = 0.08 + t * 0.92;
+          const y = evalSemeruHeight(r, phiFlow) + 0.04 + Math.sin(t * Math.PI) * 0.05;
+          const x = r * Math.cos(phiFlow);
+          const z = r * Math.sin(phiFlow);
+          const p = projectPoint3D([x, y, z], mvp, w, h);
+          if (p) {
+            const rad = (10 + t * 28) * this.zoom;
+            const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
+            grad.addColorStop(0, `rgba(255, 150, 60, ${0.8 * (1 - t * 0.5)})`);
+            grad.addColorStop(0.45, `rgba(130, 118, 112, ${0.72 * (1 - t * 0.35)})`);
+            grad.addColorStop(1, 'rgba(70, 65, 62, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        const semeruPt = projectPoint3D([-0.16, 0.22, 0.58], mvp, w, h);
+        if (semeruPt) {
+          this.drawPillTag(ctx, semeruPt.x, semeruPt.y, '💨 Awan Panas Guguran (Besuk Kobokan)', 'rgba(9, 27, 38, 0.92)', '#ff7b47');
+        }
+      }
+
       ctx.restore();
     }
 

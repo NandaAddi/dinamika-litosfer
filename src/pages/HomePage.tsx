@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EarthViewer } from '../components/3d';
+import { sound } from '../utils/soundEffects';
 
 interface HomePageProps {
   isActive?: boolean;
@@ -19,6 +20,16 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
   const [activeTab, setActiveTab] = useState<'lobby' | 'pemantik'>('lobby');
   const [mobileView, setMobileView] = useState<'model' | 'slider'>('slider');
 
+  const switchTab = (tab: 'lobby' | 'pemantik') => {
+    sound.snap();
+    setActiveTab(tab);
+  };
+
+  const handleStageClick = (path: string) => {
+    sound.snap();
+    navigate(path);
+  };
+
   return (
     <section className={`page fit-view ${isActive ? 'active' : ''}`} id="page-beranda">
       {/* Mobile view toggle */}
@@ -26,14 +37,20 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
         <button
           type="button"
           className={`mobile-toggle-btn ${mobileView === 'model' ? 'active' : ''}`}
-          onClick={() => setMobileView('model')}
+          onClick={() => {
+            sound.snap();
+            setMobileView('model');
+          }}
         >
           🧊 Globe 3D
         </button>
         <button
           type="button"
           className={`mobile-toggle-btn ${mobileView === 'slider' ? 'active' : ''}`}
-          onClick={() => setMobileView('slider')}
+          onClick={() => {
+            sound.snap();
+            setMobileView('slider');
+          }}
         >
           🎮 {activeTab === 'lobby' ? 'Lobby Belajar' : 'Pertanyaan Pemantik'}
         </button>
@@ -47,14 +64,14 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
               <button
                 type="button"
                 className={`home-tab-btn ${activeTab === 'lobby' ? 'active' : ''}`}
-                onClick={() => setActiveTab('lobby')}
+                onClick={() => switchTab('lobby')}
               >
                 <span className="tab-icon">🎮</span> Lobby Belajar
               </button>
               <button
                 type="button"
                 className={`home-tab-btn ${activeTab === 'pemantik' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pemantik')}
+                onClick={() => switchTab('pemantik')}
               >
                 <span className="tab-icon">💡</span> Pertanyaan Pemantik
               </button>
@@ -82,21 +99,21 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                   <button
                     type="button"
                     className="btn btn-magma btn-play-game"
-                    onClick={() => navigate('/modul/struktur')}
+                    onClick={() => handleStageClick('/modul/struktur')}
                   >
                     ▶ Mulai Petualangan
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline"
-                    onClick={() => navigate('/kuis')}
+                    onClick={() => handleStageClick('/kuis')}
                   >
                     🏆 Kuis Evaluasi
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline"
-                    onClick={() => setActiveTab('pemantik')}
+                    onClick={() => switchTab('pemantik')}
                   >
                     💡 Pertanyaan Pemantik →
                   </button>
@@ -112,11 +129,11 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                       <div
                         key={s.path}
                         className="stage-card"
-                        onClick={() => navigate(s.path)}
+                        onClick={() => handleStageClick(s.path)}
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') navigate(s.path);
+                          if (e.key === 'Enter' || e.key === ' ') handleStageClick(s.path);
                         }}
                       >
                         <div className="stage-head">
@@ -182,14 +199,14 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                   <button
                     type="button"
                     className="btn btn-outline"
-                    onClick={() => setActiveTab('lobby')}
+                    onClick={() => switchTab('lobby')}
                   >
                     ← Kembali ke Lobby Belajar
                   </button>
                   <button
                     type="button"
                     className="btn btn-magma"
-                    onClick={() => navigate('/modul/struktur')}
+                    onClick={() => handleStageClick('/modul/struktur')}
                   >
                     Mulai Stage 01: Struktur Bumi →
                   </button>

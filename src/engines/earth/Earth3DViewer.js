@@ -1095,6 +1095,9 @@
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
             btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            if (typeof this.onInspect === 'function') {
+              this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
+            }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
             btn.classList.toggle('active', this.showLabels);
@@ -1147,6 +1150,10 @@
       this.wrap.querySelectorAll('.e3d-pill').forEach((btn, i) => {
         btn.classList.toggle('active', i === layerIdx);
       });
+
+      if (typeof this.onInspect === 'function' && layerIdx !== null && layerIdx !== undefined) {
+        this.onInspect({ type: 'layer', id: layerIdx, name: LAYER_DATA[layerIdx]?.name });
+      }
 
       if (layerIdx === null || layerIdx === undefined) {
         this.popupEl.style.display = 'none';
