@@ -1,27 +1,18 @@
-// ==========================================================================
-// SERVICE WORKER - DINAMIKA LITOSFER (UNIVERSITAS NEGERI MALANG)
-// Offline-First Caching for 3T School Computer Labs
-// ==========================================================================
-
-const CACHE_NAME = 'dinamika-litosfer-v1';
+// Service Worker: Dinamika Litosfer (Universitas Negeri Malang) - Offline Cache
+const CACHE_NAME = 'dinamika-litosfer-v3';
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/assets/icons/icon.svg',
+  '/assets/icons/struktur-bumi.webp',
+  '/assets/icons/lempeng-tektonik.webp',
+  '/assets/icons/vulkanisme.webp',
+  '/assets/icons/tenaga-endogen.webp',
+  '/assets/icons/quiz.webp',
   '/assets/images/Lambang-UM.webp',
-  '/assets/images/earth_daymap.jpg',
-  '/assets/images/bg_beranda.jpg',
-  '/assets/images/bg_struktur.jpg',
-  '/assets/images/bg_lempeng.jpg',
-  '/assets/images/bg_vulkanisme.jpg',
-  '/assets/images/bg_endogen.jpg',
-  '/assets/images/bg_kuis.jpg',
-  '/assets/models/struktur-bumi.glb',
-  '/assets/models/lempeng-tektonik.glb',
-  '/assets/models/vulkanisme.glb',
-  '/assets/models/tenaga-endogen.glb'
+  '/assets/images/earth_daymap.webp'
 ];
 
 // 1. Install Event: Pre-cache aset berat kejuruan (3D GLB & Tekstur Satelit NASA)
@@ -79,17 +70,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // B. Aset Statis, Font, Tekstur Blue Marble, dan Model 3D GLB
-  // Cache-First dengan Stale-While-Revalidate untuk performa loading 0ms
+  // B. Chunk JS/CSS Ber-Hash Vite (Same-Origin): Immutable Cache-First
+  const isHashedBundle =
+    url.origin === self.location.origin &&
+    url.pathname.startsWith('/assets/') &&
+    (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'));
+
+  if (isHashedBundle) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // C. Aset Statis, Font & Tekstur WebP: Stale-While-Revalidate
   const isStaticAsset =
     url.pathname.startsWith('/assets/') ||
-    url.pathname.endsWith('.glb') ||
     url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com');
 

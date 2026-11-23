@@ -19,13 +19,13 @@
     },
     {
       "src": "/assets/images/Lambang-UM.webp",
-      "sizes": "512x512",
+      "sizes": "300x300",
       "type": "image/webp",
       "purpose": "any"
     },
     {
       "src": "/assets/images/Lambang-UM.webp",
-      "sizes": "512x512",
+      "sizes": "300x300",
       "type": "image/webp",
       "purpose": "maskable"
     }

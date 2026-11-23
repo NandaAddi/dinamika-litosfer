@@ -1,18 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { ReferenceModal } from '../common/ReferenceModal';
-import { ShortcutsModal } from '../common/ShortcutsModal';
-import { BadgesModal } from '../common/BadgesModal';
-import { StudentCertificateModal } from '../common/StudentCertificateModal';
 import { BadgeToast } from '../common/BadgeToast';
 import { OfflineBanner } from '../common/OfflineBanner';
 import { HomePage } from '../../pages/HomePage';
-import { ModulePage } from '../../pages/ModulePage';
-import { QuizPage } from '../../pages/QuizPage';
+import { SeismicPreloader, PreloaderModuleType } from '../common/SeismicPreloader';
 import { sound } from '../../utils/soundEffects';
 import { registerServiceWorker } from '../../utils/pwaManager';
+
+// Dynamic Lazy Imports untuk modul berat dan modal dialog
+const ModulePage = lazy(() => import('../../pages/ModulePage').then(m => ({ default: m.ModulePage })));
+const QuizPage = lazy(() => import('../../pages/QuizPage').then(m => ({ default: m.QuizPage })));
+const ReferenceModal = lazy(() => import('../common/ReferenceModal').then(m => ({ default: m.ReferenceModal })));
+const ShortcutsModal = lazy(() => import('../common/ShortcutsModal').then(m => ({ default: m.ShortcutsModal })));
+const BadgesModal = lazy(() => import('../common/BadgesModal').then(m => ({ default: m.BadgesModal })));
+const StudentCertificateModal = lazy(() => import('../common/StudentCertificateModal').then(m => ({ default: m.StudentCertificateModal })));
 
 export const MainLayout: React.FC = () => {
   const [isRefsOpen, setIsRefsOpen] = useState(false);
@@ -36,17 +39,14 @@ export const MainLayout: React.FC = () => {
     if (segment) activeModuleId = segment;
   }
 
-  // Mount ModulePage secara on-demand saat modul pertama kali dibuka
-  const [hasVisitedModule, setHasVisitedModule] = useState(isModule);
+  // Registrasi Service Worker PWA saat idle agar tidak membebani initial loading
   useEffect(() => {
-    if (isModule && !hasVisitedModule) {
-      setHasVisitedModule(true);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => registerServiceWorker());
+    } else {
+      const timer = setTimeout(registerServiceWorker, 1500);
+      return () => clearTimeout(timer);
     }
-  }, [isModule, hasVisitedModule]);
-
-  // Registrasi Service Worker PWA (Offline Cache 3T)
-  useEffect(() => {
-    registerServiceWorker();
   }, []);
 
   const handleToggleMute = useCallback(() => {
@@ -57,14 +57,29 @@ export const MainLayout: React.FC = () => {
   // Global Keyboard Shortcuts (Hotkeys Guru & Siswa)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Abaikan jika user sedang mengetik di input / textarea
+      // Abaikan jika user sedang mengetik di input / textarea / select
       const targetTag = (e.target as HTMLElement)?.tagName;
-      if (['INPUT', 'TEXTAREA'].includes(targetTag)) return;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTag)) return;
 
       // Abaikan jika modifier Ctrl / Alt / Meta sedang ditekan (kecuali shortcut murni)
       if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+      // Abaikan shortcut navigasi/3D ketika ada dialog modal terbuka
+      if (document.querySelector('dialog[open]')) return;
+
       const key = e.key;
+
+      if (key === 'm' || key === 'M') {
+        handleToggleMute();
+        return;
+      }
+      if (key === '?' || key === 'h' || key === 'H') {
+        setIsShortcutsOpen((prev) => !prev);
+        return;
+      }
+
+      // Saat halaman kuis aktif, cegah perpindahan halaman atau trigger slide/3D tak sengaja
+      if (isQuiz) return;
 
       if (key === 'ArrowRight' || key === 'd' || key === 'D') {
         const nextBtn = document.querySelector<HTMLButtonElement>('.btn-next-slide');
@@ -101,10 +116,6 @@ export const MainLayout: React.FC = () => {
           sound.rumble();
           explodeBtn.click();
         }
-      } else if (key === 'm' || key === 'M') {
-        handleToggleMute();
-      } else if (key === '?' || key === 'h' || key === 'H') {
-        setIsShortcutsOpen((prev) => !prev);
       } else if (key >= '1' && key <= '5') {
         const stageRoutes = [
           '/modul/struktur',
@@ -123,7 +134,7 @@ export const MainLayout: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, handleToggleMute]);
+  }, [navigate, handleToggleMute, isQuiz]);
 
   return (
     <div id="app" className={isHome ? 'layout-home' : 'layout-module'}>
@@ -138,32 +149,54 @@ export const MainLayout: React.FC = () => {
         {!isHome && <Sidebar />}
         <main className="main-content">
           <div className="pages">
-            <HomePage isActive={isHome} />
-            {hasVisitedModule && (
-              <ModulePage currentModuleId={activeModuleId} isActive={isModule} />
+            {isHome && <HomePage isActive={true} />}
+            {isModule && (
+              <Suspense fallback={<SeismicPreloader moduleType={activeModuleId as PreloaderModuleType} />}>
+                <ModulePage key={activeModuleId} currentModuleId={activeModuleId} isActive={true} />
+              </Suspense>
             )}
-            <QuizPage
-              isActive={isQuiz}
-              onOpenCertificate={() => setIsCertOpen(true)}
-              onOpenBadges={() => setIsBadgesOpen(true)}
-            />
+            {isQuiz && (
+              <Suspense fallback={<SeismicPreloader moduleType="beranda" />}>
+                <QuizPage
+                  isActive={true}
+                  onOpenCertificate={() => setIsCertOpen(true)}
+                  onOpenBadges={() => setIsBadgesOpen(true)}
+                />
+              </Suspense>
+            )}
           </div>
         </main>
       </div>
 
       <BadgeToast />
       <OfflineBanner />
-      <ReferenceModal isOpen={isRefsOpen} onClose={() => setIsRefsOpen(false)} />
-      <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
-      <BadgesModal
-        isOpen={isBadgesOpen}
-        onClose={() => setIsBadgesOpen(false)}
-        onOpenCertificate={() => setIsCertOpen(true)}
-      />
-      <StudentCertificateModal
-        isOpen={isCertOpen}
-        onClose={() => setIsCertOpen(false)}
-      />
+      {isRefsOpen && (
+        <Suspense fallback={null}>
+          <ReferenceModal isOpen={isRefsOpen} onClose={() => setIsRefsOpen(false)} />
+        </Suspense>
+      )}
+      {isShortcutsOpen && (
+        <Suspense fallback={null}>
+          <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+        </Suspense>
+      )}
+      {isBadgesOpen && (
+        <Suspense fallback={null}>
+          <BadgesModal
+            isOpen={isBadgesOpen}
+            onClose={() => setIsBadgesOpen(false)}
+            onOpenCertificate={() => setIsCertOpen(true)}
+          />
+        </Suspense>
+      )}
+      {isCertOpen && (
+        <Suspense fallback={null}>
+          <StudentCertificateModal
+            isOpen={isCertOpen}
+            onClose={() => setIsCertOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

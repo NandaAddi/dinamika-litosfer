@@ -5,10 +5,10 @@ export const modul1Data: ModuleData = {
   num: 1,
   name: 'Struktur Bumi',
   slug: 'struktur',
-  badge: '01 — Geologi Dasar',
+  badge: '01 · Geologi Dasar',
   title: 'Struktur Lapisan Bumi & Metode Seismik',
   description: 'Menganalisis karakteristik lapisan bumi, sifat fisik batuan, bidang diskontinuitas, serta penjalaran gelombang seismik P & S.',
-  bgImage: '/assets/images/bg_struktur.jpg',
+  bgImage: '/assets/images/bg_struktur.webp',
   layers: [
     {
       id: 'inti-dalam',
@@ -29,7 +29,7 @@ export const modul1Data: ModuleData = {
       depth: '2.900 – 5.150 km',
       temp: '± 4.000 – 5.000 °C',
       state: 'Cair (Konveksi Logam Cair)',
-      comp: 'Besi (Fe) & Nikel (Ni) Cair — Pemicu Geodynamo',
+      comp: 'Besi (Fe) & Nikel (Ni) Cair: Pemicu Geodynamo',
       density: '~9,9 – 12,2 g/cm³',
       color: '#ff922b',
       accent: '#f2842c'
@@ -53,7 +53,7 @@ export const modul1Data: ModuleData = {
       depth: '100 – 660 km',
       temp: '± 1.300 – 1.900 °C',
       state: 'Plastis / Semi-Cair (Deformabel)',
-      comp: 'Silikat (Olivin & Piroksen) — Mesin Arus Konveksi',
+      comp: 'Silikat (Olivin & Piroksen): Mesin Arus Konveksi',
       density: '~3,3 – 3,9 g/cm³',
       color: '#eb5e28',
       accent: '#ff7b47'

@@ -57,7 +57,6 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
     >
       <div className="refs-head">
         <div className="shortcuts-modal-title">
-          <span className="shortcuts-title-icon">🏅</span>
           <div>
             <h3 id="badges-title">Pencapaian &amp; Lencana Geolog Lapangan</h3>
             <p className="shortcuts-title-sub">
@@ -113,7 +112,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
               className={`badge-card ${b.unlocked ? 'unlocked' : 'locked'}`}
             >
               <div className="badge-card-icon-box">
-                <span className="badge-main-icon">{b.unlocked ? b.icon : '🔒'}</span>
+                <span className="badge-main-icon">{b.unlocked ? b.icon : '◇'}</span>
                 {b.unlocked && <span className="badge-shine-effect"></span>}
               </div>
               <div className="badge-card-info">
@@ -126,11 +125,11 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
                 <div className="badge-card-status">
                   {b.unlocked ? (
                     <span className="badge-unlocked-time">
-                      ✨ Terbuka: {b.unlockedAt || 'Selesai'}
+                      Terbuka: {b.unlockedAt || 'Selesai'}
                     </span>
                   ) : (
                     <span className="badge-locked-hint">
-                      🔒 Tuntaskan materi untuk membuka
+                      Tuntaskan materi untuk membuka
                     </span>
                   )}
                 </div>
@@ -151,7 +150,7 @@ export const BadgesModal: React.FC<BadgesModalProps> = ({
               onOpenCertificate();
             }}
           >
-            📄 Cetak / Simpan Portofolio Belajar (A4)
+            Cetak / Simpan Portofolio Belajar (A4)
           </button>
         )}
         <button

@@ -54,6 +54,12 @@ export interface ModuleData {
   layers?: LayerInfo[];
 }
 
+export interface QuizModel3D {
+  viewer: 'earth' | 'tectonic' | 'endogen';
+  slideIndex: number;
+  hint?: string;
+}
+
 export interface QuizQuestion {
   id: number;
   category: string;
@@ -61,6 +67,7 @@ export interface QuizQuestion {
   options: string[];
   answer: number; // 0 to 3
   explanation: string;
+  model3d?: QuizModel3D;
 }
 
 export interface QuizResult {

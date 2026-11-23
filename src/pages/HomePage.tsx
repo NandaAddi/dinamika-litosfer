@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EarthViewer } from '../components/3d';
+import { SeismicPreloader } from '../components/common/SeismicPreloader';
 import { sound } from '../utils/soundEffects';
+import { useIsMobileViewport } from '../utils/devicePerf';
+
+const EarthViewer = lazy(() => import('../components/3d/EarthViewer').then((m) => ({ default: m.EarthViewer })));
 
 interface HomePageProps {
   isActive?: boolean;
@@ -17,8 +20,19 @@ const STAGES = [
 
 export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobileViewport();
   const [activeTab, setActiveTab] = useState<'lobby' | 'pemantik'>('lobby');
   const [mobileView, setMobileView] = useState<'model' | 'slider'>('slider');
+  const [hasOpenedModel, setHasOpenedModel] = useState<boolean>(() => !isMobile);
+
+  useEffect(() => {
+    if (!isMobile || mobileView === 'model') {
+      setHasOpenedModel(true);
+    }
+  }, [isMobile, mobileView]);
+
+  const shouldRenderViewer = isActive && (!isMobile || hasOpenedModel);
+  const isViewerActive = isActive && (!isMobile || mobileView === 'model');
 
   const switchTab = (tab: 'lobby' | 'pemantik') => {
     sound.snap();
@@ -42,7 +56,7 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
             setMobileView('model');
           }}
         >
-          🧊 Globe 3D
+          Globe 3D
         </button>
         <button
           type="button"
@@ -52,7 +66,7 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
             setMobileView('slider');
           }}
         >
-          🎮 {activeTab === 'lobby' ? 'Lobby Belajar' : 'Pertanyaan Pemantik'}
+          {activeTab === 'lobby' ? 'Lobby Belajar' : 'Pertanyaan Pemantik'}
         </button>
       </div>
 
@@ -66,14 +80,14 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                 className={`home-tab-btn ${activeTab === 'lobby' ? 'active' : ''}`}
                 onClick={() => switchTab('lobby')}
               >
-                <span className="tab-icon">🎮</span> Lobby Belajar
+                Lobby Belajar
               </button>
               <button
                 type="button"
                 className={`home-tab-btn ${activeTab === 'pemantik' ? 'active' : ''}`}
                 onClick={() => switchTab('pemantik')}
               >
-                <span className="tab-icon">💡</span> Pertanyaan Pemantik
+                Pertanyaan Pemantik
               </button>
             </div>
             <span className="home-edition-badge">Geografi SMA/MA · Kurikulum Merdeka</span>
@@ -83,7 +97,6 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
             {activeTab === 'lobby' ? (
               <div className="home-lobby-view">
                 <div className="hero-badges">
-                  <span className="hbadge">🎮 Interactive Learning Game</span>
                   <span className="hbadge">4 Simulasi 3D</span>
                   <span className="hbadge">13 Soal Evaluasi</span>
                 </div>
@@ -101,21 +114,21 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                     className="btn btn-magma btn-play-game"
                     onClick={() => handleStageClick('/modul/struktur')}
                   >
-                    ▶ Mulai Petualangan
+                    Mulai Petualangan
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline"
                     onClick={() => handleStageClick('/kuis')}
                   >
-                    🏆 Kuis Evaluasi
+                    Kuis Evaluasi
                   </button>
                   <button
                     type="button"
                     className="btn btn-outline"
                     onClick={() => switchTab('pemantik')}
                   >
-                    💡 Pertanyaan Pemantik →
+                    Pertanyaan Pemantik
                   </button>
                 </div>
 
@@ -201,14 +214,14 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
                     className="btn btn-outline"
                     onClick={() => switchTab('lobby')}
                   >
-                    ← Kembali ke Lobby Belajar
+                    Kembali ke Lobby Belajar
                   </button>
                   <button
                     type="button"
                     className="btn btn-magma"
                     onClick={() => handleStageClick('/modul/struktur')}
                   >
-                    Mulai Stage 01: Struktur Bumi →
+                    Mulai Stage 01: Struktur Bumi
                   </button>
                 </div>
               </div>
@@ -218,12 +231,22 @@ export const HomePage: React.FC<HomePageProps> = ({ isActive = true }) => {
 
         {/* Kolom Kanan: Viewport 3D Terpadu */}
         <div className="home-pane-viewport">
-          <EarthViewer
-            pageId="beranda"
-            badgeTitle="3D Interaktif · Dinamika Litosfer"
-            isActive={isActive}
-            variant="embedded"
-          />
+          {shouldRenderViewer && (
+            <Suspense
+              fallback={
+                <div className="model-frame-card model-embedded-viewport" style={{ position: 'relative' }}>
+                  <SeismicPreloader moduleType="beranda" />
+                </div>
+              }
+            >
+              <EarthViewer
+                pageId="beranda"
+                badgeTitle="3D Interaktif · Dinamika Litosfer"
+                isActive={isViewerActive}
+                variant="embedded"
+              />
+            </Suspense>
+          )}
         </div>
       </div>
     </section>

@@ -5,10 +5,10 @@ export const modul4Data: ModuleData = {
   num: 4,
   name: 'Tenaga Endogen',
   slug: 'endogen',
-  badge: '04 — Geomorfologi',
+  badge: '04 · Geomorfologi',
   title: 'Tenaga Endogen, Patahan, & Siklus Batuan',
   description: 'Menganalisis proses epirogenesa, orogenesa, deformasi lipatan migas, sesar horst-graben, siklus batuan lengkap, hingga amblesan antropogenik.',
-  bgImage: '/assets/images/bg_endogen.jpg',
+  bgImage: '/assets/images/bg_endogen.webp',
   slides: [
     {
       number: '1',

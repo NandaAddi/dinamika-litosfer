@@ -30,7 +30,7 @@ export const BadgeToast: React.FC = () => {
         <div className="badge-toast-icon">{toastBadge.icon}</div>
         <div className="badge-toast-body">
           <div className="badge-toast-headline">
-            <span>✨ LENCANA PRESTASI TERBUKA!</span>
+            <span>LENCANA PRESTASI TERBUKA!</span>
             <span className="badge-toast-xp">+{toastBadge.xpReward} XP</span>
           </div>
           <div className="badge-toast-title">{toastBadge.title}</div>

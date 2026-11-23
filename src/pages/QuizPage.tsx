@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { QUIZ_QUESTIONS } from '../data/quiz';
 import { sound } from '../utils/soundEffects';
 import { progressStore } from '../data/progressStore';
+import { SeismicPreloader } from '../components/common/SeismicPreloader';
+
+const EarthViewer = lazy(() =>
+  import('../components/3d/EarthViewer').then((m) => ({ default: m.EarthViewer }))
+);
+const TectonicViewer = lazy(() =>
+  import('../components/3d/TectonicViewer').then((m) => ({ default: m.TectonicViewer }))
+);
+const EndogenViewer = lazy(() =>
+  import('../components/3d/EndogenViewer').then((m) => ({ default: m.EndogenViewer }))
+);
 
 interface QuizPageProps {
   isActive?: boolean;
@@ -10,7 +21,13 @@ interface QuizPageProps {
   onOpenBadges?: () => void;
 }
 
-const STORAGE_KEY = 'dinamika_litosfer_quiz_v1';
+interface AnswerRecord {
+  id: number;
+  selected: number;
+  correct: number;
+}
+
+const STORAGE_KEY = 'dinamika_litosfer_quiz_v2';
 
 export const QuizPage: React.FC<QuizPageProps> = ({
   isActive = true,
@@ -74,6 +91,19 @@ export const QuizPage: React.FC<QuizPageProps> = ({
     return false;
   });
 
+  const [answersHistory, setAnswersHistory] = useState<AnswerRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed.answersHistory) ? parsed.answersHistory : [];
+      }
+    } catch {}
+    return [];
+  });
+
+  const [showReview, setShowReview] = useState(false);
+
   const totalQuestions = QUIZ_QUESTIONS.length;
   const currentQ = QUIZ_QUESTIONS[currentIdx] || QUIZ_QUESTIONS[0];
 
@@ -86,16 +116,21 @@ export const QuizPage: React.FC<QuizPageProps> = ({
           selectedOpt,
           isAnswered,
           score,
-          isFinished
+          isFinished,
+          answersHistory
         })
       );
     } catch {}
-  }, [currentIdx, selectedOpt, isAnswered, score, isFinished]);
+  }, [currentIdx, selectedOpt, isAnswered, score, isFinished, answersHistory]);
 
   const handleSelect = (idx: number) => {
     if (isAnswered) return;
     setSelectedOpt(idx);
     setIsAnswered(true);
+    setAnswersHistory((prev) => [
+      ...prev.filter((item) => item.id !== currentQ.id),
+      { id: currentQ.id, selected: idx, correct: currentQ.answer }
+    ]);
 
     const isCorrect = idx === currentQ.answer;
     if (isCorrect) {
@@ -139,14 +174,21 @@ export const QuizPage: React.FC<QuizPageProps> = ({
     setIsAnswered(false);
     setScore(0);
     setIsFinished(false);
+    setAnswersHistory([]);
+    setShowReview(false);
   };
 
   const pct = Math.round((score / totalQuestions) * 100);
   const wrongCount = totalQuestions - score;
+  const bestScore = Math.max(score, progressStore.getData().bestQuizScore || 0);
+
+  const modelSpec = !isFinished ? currentQ.model3d : undefined;
+  const hideSpoilers = !isAnswered;
+  const quizBadgeTitle = isAnswered ? undefined : 'Objek 3D · Putar untuk mengamati';
 
   return (
     <section className={`page fit-view ${isActive ? 'active' : ''}`} id="page-kuis">
-      <div className="quiz-box">
+      <div className={`quiz-box ${modelSpec ? 'with-model' : ''}`}>
         {!isFinished ? (
           <div id="q-body">
             <div className="q-head">
@@ -160,8 +202,60 @@ export const QuizPage: React.FC<QuizPageProps> = ({
               <i style={{ width: `${((currentIdx + 1) / totalQuestions) * 100}%` }}></i>
             </div>
 
-            <div className="q-grid">
-              <div>
+            <div className={`q-grid ${modelSpec ? 'with-model' : ''}`}>
+              {modelSpec && (
+                <div className="q-model-col">
+                  <Suspense
+                    fallback={
+                      <div className="model-frame-card" style={{ position: 'relative' }}>
+                        <SeismicPreloader
+                          moduleType={
+                            modelSpec.viewer === 'earth'
+                              ? 'struktur'
+                              : modelSpec.viewer === 'tectonic'
+                              ? 'lempeng'
+                              : 'endogen'
+                          }
+                        />
+                      </div>
+                    }
+                  >
+                    {modelSpec.viewer === 'earth' && (
+                      <EarthViewer
+                        key="quiz-earth"
+                        slideIndex={modelSpec.slideIndex}
+                        pageId="struktur"
+                        isActive={isActive}
+                        hideSpoilers={hideSpoilers}
+                        badgeTitle={quizBadgeTitle || 'Pembahasan Visual 3D · Struktur Bumi'}
+                      />
+                    )}
+                    {modelSpec.viewer === 'tectonic' && (
+                      <TectonicViewer
+                        key="quiz-tectonic"
+                        slideIndex={modelSpec.slideIndex}
+                        isActive={isActive}
+                        hideSpoilers={hideSpoilers}
+                        badgeTitle={quizBadgeTitle || 'Pembahasan Visual 3D · Lempeng Tektonik'}
+                      />
+                    )}
+                    {modelSpec.viewer === 'endogen' && (
+                      <EndogenViewer
+                        key="quiz-endogen"
+                        slideIndex={modelSpec.slideIndex}
+                        isActive={isActive}
+                        hideSpoilers={hideSpoilers}
+                        badgeTitle={quizBadgeTitle || 'Pembahasan Visual 3D · Tenaga Endogen'}
+                      />
+                    )}
+                  </Suspense>
+                  {modelSpec.hint && !isAnswered && (
+                    <p className="q-model-hint">{modelSpec.hint}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="q-question-col">
                 <div className="q-text">{currentQ.question}</div>
                 <div className="q-opts">
                   {currentQ.options.map((opt, i) => {
@@ -216,7 +310,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({
                   id="q-next"
                   onClick={handleNext}
                 >
-                  {currentIdx === totalQuestions - 1 ? 'Lihat Hasil 🏆' : 'Soal Berikutnya →'}
+                  {currentIdx === totalQuestions - 1 ? 'Lihat Hasil' : 'Soal Berikutnya'}
                 </button>
               )}
             </div>
@@ -248,8 +342,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({
                 <span>Salah</span>
               </div>
               <div>
-                <b>{totalQuestions}</b>
-                <span>Total Soal</span>
+                <b>{bestScore}/{totalQuestions}</b>
+                <span>Skor Terbaik</span>
               </div>
             </div>
 
@@ -271,7 +365,19 @@ export const QuizPage: React.FC<QuizPageProps> = ({
                     onOpenCertificate();
                   }}
                 >
-                  📄 Cetak / Simpan Portofolio Belajar (A4 PDF)
+                  Cetak / Simpan Portofolio Belajar (A4 PDF)
+                </button>
+              )}
+              {answersHistory.length > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={() => {
+                    sound.snap();
+                    setShowReview((prev) => !prev);
+                  }}
+                >
+                  {showReview ? 'Sembunyikan Pembahasan' : 'Tinjau Pembahasan Jawaban'}
                 </button>
               )}
               {onOpenBadges && (
@@ -283,13 +389,43 @@ export const QuizPage: React.FC<QuizPageProps> = ({
                     onOpenBadges();
                   }}
                 >
-                  🏅 Lihat Lencana Prestasi
+                  Lihat Lencana Prestasi
                 </button>
               )}
               <button type="button" className="btn btn-outline" onClick={handleReset}>
-                ↻ Ulangi Kuis
+                Ulangi Kuis
               </button>
             </div>
+
+            {showReview && answersHistory.length > 0 && (
+              <div className="quiz-review-list" aria-label="Pembahasan Jawaban Kuis">
+                {QUIZ_QUESTIONS.map((q, qIdx) => {
+                  const rec = answersHistory.find((a) => a.id === q.id);
+                  if (!rec) return null;
+                  const isRight = rec.selected === q.answer;
+                  return (
+                    <div key={q.id} className={`quiz-review-item ${isRight ? 'ok' : 'no'}`}>
+                      <div className="qr-head">
+                        <span className="qr-num">Soal {qIdx + 1} · {q.category}</span>
+                        <span className={`qr-badge ${isRight ? 'ok' : 'no'}`}>
+                          {isRight ? 'Benar' : 'Keliru'}
+                        </span>
+                      </div>
+                      <p className="qr-question">{q.question}</p>
+                      <p className="qr-answer-meta">
+                        Jawaban Anda: <b>{'ABCD'[rec.selected]}. {q.options[rec.selected]}</b>
+                        {!isRight && (
+                          <>
+                            {' · '}Kunci: <b>{'ABCD'[q.answer]}. {q.options[q.answer]}</b>
+                          </>
+                        )}
+                      </p>
+                      <p className="qr-explanation">{q.explanation}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

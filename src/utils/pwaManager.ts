@@ -1,7 +1,4 @@
-// ==========================================================================
-// PWA & OFFLINE MANAGER - DINAMIKA LITOSFER
-// Mengelola Registrasi Service Worker, Prompt Instalasi & Status Koneksi
-// ==========================================================================
+// PWA & Offline Manager: Registrasi Service Worker, Prompt Instalasi & Status Koneksi
 
 export interface PWAState {
   isOnline: boolean;
@@ -89,12 +86,10 @@ export function registerServiceWorker(): void {
     return;
   }
 
-  // Daftarkan Service Worker setelah halaman selesai dimuat sepenuhnya
-  window.addEventListener('load', () => {
+  const doRegister = () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((reg) => {
-        // Cek apakah service worker sudah aktif meng-cache
         if (reg.active) {
           currentState.isOfflineReady = true;
           notify();
@@ -118,5 +113,11 @@ export function registerServiceWorker(): void {
       .catch((err) => {
         console.warn('[PWA] Registrasi Service Worker gagal:', err);
       });
-  });
+  };
+
+  if (document.readyState === 'complete') {
+    doRegister();
+  } else {
+    window.addEventListener('load', doRegister, { once: true });
+  }
 }

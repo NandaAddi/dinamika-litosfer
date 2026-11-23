@@ -5,10 +5,10 @@ export const modul2Data: ModuleData = {
   num: 2,
   name: 'Lempeng Tektonik',
   slug: 'lempeng',
-  badge: '02 — Dinamika Litosfer',
+  badge: '02 · Dinamika Litosfer',
   title: 'Tektonik Lempeng & Busur Subduksi Nusantara',
   description: 'Menganalisis teori pengapungan benua, mekanisme penggerak lempeng, batas konvergen, divergen, transform, serta kerangka geologi Indonesia.',
-  bgImage: '/assets/images/bg_lempeng.jpg',
+  bgImage: '/assets/images/bg_lempeng.webp',
   slides: [
     {
       number: '1',

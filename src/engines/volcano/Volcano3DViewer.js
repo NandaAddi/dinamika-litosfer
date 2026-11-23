@@ -18,15 +18,40 @@
      * Slide 7: Zona Pembentukan Batuan Beku (Granit, Andesit, Batu Apung) & Tanah Andosol
    ========================================================================== */
 /* ES Module Export */
+import { getDevicePerfProfile, buildMobileFragmentSource } from '../../utils/devicePerf';
+import { linkProgramAsync, releaseWebGLContextAsync } from '../../utils/webglAsync';
+import { createDockPicker } from '../../utils/dockPicker';
+
+  // Cache offscreen sprite partikel radial agar tidak membuat createRadialGradient 15-24x per frame
+  const _puffSpriteCache = new Map();
+  function getPuffSprite(key, stops) {
+    let spr = _puffSpriteCache.get(key);
+    if (spr) return spr;
+    const size = 64;
+    spr = document.createElement('canvas');
+    spr.width = size;
+    spr.height = size;
+    const c = spr.getContext('2d');
+    const half = size * 0.5;
+    const g = c.createRadialGradient(half, half, 1, half, half, half);
+    for (let i = 0; i < stops.length; i++) {
+      g.addColorStop(stops[i][0], stops[i][1]);
+    }
+    c.fillStyle = g;
+    c.fillRect(0, 0, size, size);
+    _puffSpriteCache.set(key, spr);
+    return spr;
+  }
+
   const PART_DATA = [
     {
       id: 'kerak-dasar',
       index: 0,
-      name: 'Batuan Dasar & Stratigrafi Kerak Jawa',
+      name: 'Batuan Dasar & Stratigrafi Kerak',
       depth: '1.500 – 8.000 m di bawah permukaan',
       temp: '± 150 – 650 °C',
       state: 'Padat Berlapis (Sedimen Tersier & Vulkanik Tua)',
-      comp: 'Batu Gamping, Breksi Vulkanik Tua & Batuan Dasar Kompleks Tengger–Jambangan',
+      comp: 'Batu Gamping, Breksi Vulkanik Tua & Batuan Dasar Kompleks Kaldera',
       density: '~2,65 – 2,80 g/cm³',
       accent: '#8d99ae',
       explodeVec: [-0.18, -0.26, -0.18]
@@ -34,8 +59,8 @@
     {
       id: 'kerucut-semeru',
       index: 1,
-      name: 'Kerucut Stratovolcano Gunung Semeru (Mahameru)',
-      depth: 'Puncak 3.676 mdpl · Batas Vegetasi Arcopodo ~2.900 mdpl',
+      name: 'Kerucut Gunung Api Stratovolcano',
+      depth: 'Puncak Kerucut · Zona Kawah hingga Kaki Lereng',
       temp: '8 – 24 °C (Permukaan) · >400 °C (Kawah)',
       state: 'Kerucut Berlapis (Perselingan Lava Andesit & Piroklastik Tefra)',
       comp: 'Andesit-Basaltik, Endapan Piroklastik, Pasir Vulkanik Puncak & Tanah Andosol Lereng',
@@ -46,11 +71,11 @@
     {
       id: 'dapur-magma',
       index: 2,
-      name: 'Batolit & Dapur Magma Utama Semeru',
+      name: 'Batolit & Dapur Magma Utama',
       depth: '4 – 12 km di bawah kawah',
       temp: '± 1.050 – 1.250 °C',
       state: 'Lelehan Silikat Pijar Kaya Gas (Reservoir Magma)',
-      comp: 'Magma Andesitik–Basaltik Hasil Flux Melting Zona Subduksi Jawa',
+      comp: 'Magma Andesitik–Basaltik Hasil Flux Melting Zona Subduksi',
       density: '~2,55 – 2,70 g/cm³',
       accent: '#ff5a36',
       explodeVec: [0.0, -0.34, 0.0]
@@ -70,11 +95,11 @@
     {
       id: 'diatrema-kawah',
       index: 4,
-      name: 'Diatrema, Kawah Jonggring Saloko & Aliran Curah Kobokan',
+      name: 'Diatrema, Kawah Utama & Alur Awan Panas',
       depth: '0 – 4 km (Pipa Kepundan Utama & Kubah Lava)',
       temp: '± 850 – 1.150 °C',
       state: 'Saluran Aktif Erupsi Vulkano, Kubah Lava & Awan Panas Guguran (APG)',
-      comp: 'Magma Andesitik Kental, Kubah Lava Jonggring Saloko & Guguran Lava Besuk Kobokan',
+      comp: 'Magma Andesitik Kental, Kubah Lava Kawah Utama & Guguran Lava Awan Panas',
       density: '~2,50 – 2,68 g/cm³',
       accent: '#f7c948',
       explodeVec: [0.24, 0.28, 0.24]
@@ -85,8 +110,8 @@
     {
       id: 'anatomi',
       modeInt: 0,
-      badge: '🌋 Anatomi Gunung Semeru (Mahameru 3.676 mdpl)',
-      hint: 'Irisan 3D Puncak Mahameru, Kawah Jonggring Saloko, Pipa Diatrema & Dapur Magma.',
+      badge: 'Anatomi Gunung Api Stratovolcano',
+      hint: 'Irisan 3D Puncak Stratovolcano, Kawah Utama, Pipa Diatrema & Dapur Magma.',
       targetYaw: 0.72,
       targetPitch: 0.28,
       targetZoom: 1.04,
@@ -95,7 +120,7 @@
     {
       id: 'intrusi',
       modeInt: 1,
-      badge: '🍄 Bentukan Intrusi Magma (Plutonisme Bawah Permukaan)',
+      badge: 'Bentukan Intrusi Magma (Plutonisme Bawah Permukaan)',
       hint: 'Injeksi magma ke celah batuan: Batolit, Lakolit (kubah), Sill (mendatar), Dike (korok) & Apolisa.',
       targetYaw: 0.82,
       targetPitch: 0.20,
@@ -105,8 +130,8 @@
     {
       id: 'material',
       modeInt: 2,
-      badge: '🪨 Material Erupsi: Gas Fumarol, Lava & Tefra Padat',
-      hint: 'Semburan gas Jonggring Saloko, lontaran Bom (>64mm) & Lapili, serta aliran lava Besuk Kobokan.',
+      badge: 'Material Erupsi: Gas Fumarol, Lava & Tefra Padat',
+      hint: 'Semburan gas fumarol kawah, lontaran Bom (>64mm) & Lapili, serta aliran lava menuruni lereng.',
       targetYaw: 0.65,
       targetPitch: 0.30,
       targetZoom: 1.0,
@@ -115,8 +140,8 @@
     {
       id: 'efusif_merapi',
       modeInt: 3,
-      badge: '🟡 Kubah Lava & Awan Panas Guguran (Curah Kobokan)',
-      hint: 'Runtuhnya kubah lava kawah Jonggring Saloko memicu luncuran awan panas (wedhus gembel) ke lereng.',
+      badge: 'Kubah Lava & Awan Panas Guguran',
+      hint: 'Runtuhnya kubah lava di kawah utama memicu luncuran awan panas (wedhus gembel) menuruni lereng.',
       targetYaw: 0.52,
       targetPitch: 0.34,
       targetZoom: 1.04,
@@ -125,8 +150,8 @@
     {
       id: 'plinian',
       modeInt: 4,
-      badge: '🔴 Letusan Katastrofik Plinian & Banjir Lahar St. Vincent',
-      hint: 'Tiang erupsi vertikal raksasa menembus stratosfer (Tambora/Krakatau) & luapan lahar kawah.',
+      badge: 'Letusan Katastrofik Plinian & Banjir Lahar St. Vincent',
+      hint: 'Tiang erupsi vertikal raksasa menembus stratosfer & luapan lahar dari danau kawah.',
       targetYaw: 0.68,
       targetPitch: 0.22,
       targetZoom: 0.92,
@@ -135,8 +160,8 @@
     {
       id: 'vulkano_pelee',
       modeInt: 5,
-      badge: '☁️ Letusan Tipe Vulkano (Semeru/Bromo) & Tipe Pelee',
-      hint: 'Letusan ritmik tiang abu kembang kol khas Kawah Jonggring Saloko Semeru & hembusan lateral Pelee.',
+      badge: 'Letusan Tipe Vulkano & Tipe Pelee',
+      hint: 'Letusan ritmik tiang abu kembang kol Tipe Vulkano & hembusan awan panas lateral Tipe Pelee.',
       targetYaw: 0.62,
       targetPitch: 0.28,
       targetZoom: 1.02,
@@ -145,8 +170,8 @@
     {
       id: 'batuan_manfaat',
       modeInt: 6,
-      badge: '🏛️ Zona Batuan Beku (Granit, Andesit, Apung) & Andosol',
-      hint: 'Granit membeku lambat di Batolit, Porfiri di Korok/Dike, Andesit & Batu Apung di lereng Semeru.',
+      badge: 'Zona Batuan Beku (Granit, Andesit, Apung) & Andosol',
+      hint: 'Granit membeku lambat di Batolit, Porfiri di Korok/Dike, Andesit & Batu Apung di lereng gunung api.',
       targetYaw: 0.76,
       targetPitch: 0.26,
       targetZoom: 1.05,
@@ -770,7 +795,11 @@
     float fbm(vec3 p) {
       float v = 0.0;
       float a = 0.5;
+      #ifdef MOBILE_LITE
+      for (int i = 0; i < 2; i++) {
+      #else
       for (int i = 0; i < 4; i++) {
+      #endif
         v += a * noise(p);
         p = p * 2.04 + vec3(1.7, 9.2, 5.4);
         a *= 0.5;
@@ -781,12 +810,21 @@
     // Perturbasi normal 3D analitik untuk detail mikro-relief tebing batuan, kekar lava & kawah
     vec3 perturbNormal(vec3 N, vec3 p, float scale, float strength) {
       vec2 e = vec2(0.011, 0.0);
+      #ifdef MOBILE_LITE
+      float h0 = noise(p * scale);
+      vec3 grad = vec3(
+        noise((p + e.xyy) * scale) - h0,
+        noise((p + e.yxy) * scale) - h0,
+        noise((p + e.yyx) * scale) - h0
+      ) / e.x;
+      #else
       float h0 = fbm(p * scale);
       vec3 grad = vec3(
         fbm((p + e.xyy) * scale) - h0,
         fbm((p + e.yxy) * scale) - h0,
         fbm((p + e.yyx) * scale) - h0
       ) / e.x;
+      #endif
       grad -= N * dot(grad, N);
       return normalize(N - grad * strength);
     }
@@ -799,10 +837,15 @@
       vec3 L3 = normalize(vec3(0.15, -0.85, -0.45));
 
       float hC = fbm(vPos * 16.0);
+      #ifdef MOBILE_LITE
+      float hDetail = noise(vPos * 48.0);
+      #else
       float hDetail = fbm(vPos * 48.0);
+      #endif
       float grain = noise(vPos * 96.0);
-      float bumpStrength = (uPartIndex == 1 && vSurfType < 0.5) ? 0.052 : 0.042;
-      vec3 N = perturbNormal(N_geom, vPos, 22.0, bumpStrength);
+      float bumpScale = 22.0;
+      float bumpStrength = 0.042;
+      float lakeFlat = 0.0;
 
       float rim = pow(1.0 - max(dot(N_geom, V), 0.0), 2.6);
 
@@ -814,6 +857,7 @@
 
       if (uPartIndex == 0) {
         // PART 0: BATUAN DASAR & STRATIGRAFI KERAK JAWA SELATAN (TNBTS)
+        bumpScale = 22.0; bumpStrength = 0.042;
         float rXZ = length(vPos.xz);
         // Lengkungan lapisan sedimen terangkat di atas kubah Lakolit (x = 0.64, z = 0)
         float dLac = length(vec2(vPos.x - 0.64, vPos.z * 1.4));
@@ -864,6 +908,7 @@
 
         if (vSurfType < 0.5) {
           // === PERMUKAAN EKSTERIOR LERENG GUNUNG SEMERU ===
+          bumpScale = 22.0; bumpStrength = 0.052;
           vec2 satUV = vec2(fract(0.79 + vUV.x * 0.09), clamp(0.49 + vUV.y * 0.09, 0.01, 0.99));
           vec3 satCol = texture2D(uEarthTex, satUV).rgb;
           float slope = 1.0 - clamp(N_geom.y, 0.0, 1.0);
@@ -911,7 +956,7 @@
             vec3 lakeCol      = mix(vec3(0.04, 0.32, 0.48), vec3(0.12, 0.62, 0.74), 0.35 + 0.35 * ripples);
             baseCol = mix(baseCol, vec3(0.42, 0.56, 0.24), shoreMeadow * 0.78);
             baseCol = mix(baseCol, lakeCol, waterMask);
-            N = mix(N, vec3(0.0, 1.0, 0.0), waterMask * 0.88);
+            lakeFlat = waterMask * 0.88;
             specStrength = mix(specStrength, 0.92, waterMask);
             specPower = mix(specPower, 72.0, waterMask);
           }
@@ -945,7 +990,7 @@
           ao = mix(0.68, 1.0, clamp(N_geom.y * 0.85 + 0.25, 0.0, 1.0)) * (1.0 - kobokanFloor * 0.15);
         } else {
           // === DINDING PENAMPANG IRISAN 90 DERAJAT STRATOVOLCANO GUNUNG SEMERU ===
-          N = perturbNormal(N_geom, vPos, 32.0, 0.065);
+          bumpScale = 32.0; bumpStrength = 0.065;
 
           // Kemiringan lapisan purba (paleo-slope) mengikuti morfologi kerucut komposit + undulasi organik
           float undulate = (hC - 0.5) * 0.042 + 0.016 * sin(rXZ * 22.0);
@@ -999,7 +1044,7 @@
         }
       } else if (uPartIndex == 2) {
         // PART 2: BATOLIT & DAPUR MAGMA UTAMA SEMERU
-        N = perturbNormal(N_geom, vPos, 18.0, 0.055);
+        bumpScale = 18.0; bumpStrength = 0.055;
         float rXZ = length(vPos.xz);
         vec3 p = vPos * 6.2 + vec3(0.0, -uTime * 0.38, uTime * 0.18);
         float w = fbm(p);
@@ -1022,7 +1067,7 @@
         specStrength = 0.48;
       } else if (uPartIndex == 3) {
         // PART 3: BENTUKAN INTRUSI PLUTONIK FLUSH (LAKOLIT, SILL, DIKE/KOROK & APOLISA)
-        N = perturbNormal(N_geom, vPos, 28.0, 0.058);
+        bumpScale = 28.0; bumpStrength = 0.058;
 
         // Tekstur Batuan Beku Korok (Porfiri/Diabas pada Chilled Margin Tepi Intrusi)
         float porphyritic = step(0.68, grain);
@@ -1047,7 +1092,7 @@
         specStrength = 0.42;
       } else {
         // PART 4: PIPA KEPUNDAN (DIATREMA), KUBAH LAVA JONGGRING SALOKO & ALIRAN LAVA CURAH KOBOKAN
-        N = perturbNormal(N_geom, vPos, 26.0, 0.062);
+        bumpScale = 26.0; bumpStrength = 0.062;
         float flow = fbm(vec3(vPos.x * 10.0, vPos.y * 8.0 - uTime * 2.8, vPos.z * 10.0));
         float upwardWave = 0.5 + 0.5 * sin(vPos.y * 22.0 - uTime * 5.0);
 
@@ -1075,6 +1120,12 @@
           emissive = (1.0 - blockyCrust * 0.68) * 0.82;
         }
         specStrength = 0.50;
+      }
+
+      // Single-site normal perturbation (mencegah compiler inlining explosion 6x di ANGLE/HLSL)
+      vec3 N = perturbNormal(N_geom, vPos, bumpScale, bumpStrength);
+      if (lakeFlat > 0.01) {
+        N = normalize(mix(N, vec3(0.0, 1.0, 0.0), lakeFlat));
       }
 
       // Pencahayaan 3-Titik (Key Sun Light + Sky Hemisphere Fill + Warm Magmatic Under-Bounce)
@@ -1135,6 +1186,14 @@
       this.slideIndex = 0;
       this.simTime = 0;
       this.lastFrameTime = performance.now();
+      this.onReady = null;
+      this._hasFiredReady = false;
+      this.perf = getDevicePerfProfile();
+      this._frameCounter = 0;
+      this._forceHudRedraw = true;
+      this._textWidthCache = new Map();
+      this._needsResize = true;
+      this._pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
 
       // Sandbox Magma Physics State (Opsi C)
       this.sandboxActive = false;
@@ -1155,8 +1214,23 @@
       this.isDestroyed = false;
       this.isPaused = false;
       if (!this._cleanups) this._cleanups = [];
+      if (typeof ResizeObserver !== 'undefined' && this.wrap) {
+        this._ro = new ResizeObserver(() => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        });
+        this._ro.observe(this.wrap);
+      } else {
+        const onWinResize = () => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        };
+        window.addEventListener('resize', onWinResize, { passive: true });
+        this._cleanups.push(() => window.removeEventListener('resize', onWinResize));
+      }
       if (this.glCanvas) {
         const onLost = (e) => {
+          if (this.isDestroyed) return;
           e.preventDefault();
           this.isPaused = true;
           if (this.rafId) {
@@ -1198,26 +1272,26 @@
     buildDOM() {
       const badgeEl = this.cardEl.querySelector('.model-badge');
       if (badgeEl) {
-        badgeEl.innerHTML = '<span>🌋</span> 3D Interaktif · Anatomi Gunung Semeru';
+        badgeEl.textContent = '3D Interaktif · Anatomi Gunung Api';
       }
 
       this.wrap = document.createElement('div');
       this.wrap.className = 'earth3d-stage';
       this.wrap.innerHTML = `
-        <canvas class="earth3d-gl" aria-label="Model 3D Interaktif Anatomi Gunung Semeru"></canvas>
+        <canvas class="earth3d-gl" aria-label="Model 3D Interaktif Anatomi Gunung Api"></canvas>
         <canvas class="earth3d-hud"></canvas>
 
         <!-- Banner Penjelasan Mode Animasi Slide -->
         <div class="earth3d-sim-banner">
-          <b class="sim-title">🌋 Anatomi Gunung Semeru (Mahameru 3.676 mdpl)</b>
-          <span class="sim-sub">Putar model 3D Gunung Semeru (drag) atau klik struktur magma untuk detail.</span>
+          <b class="sim-title">Anatomi Gunung Api Stratovolcano</b>
+          <span class="sim-sub">Putar model 3D gunung api (drag) atau klik struktur magma untuk detail.</span>
         </div>
 
         <!-- Kartu Detail Komponen Vulkanik -->
         <div class="earth3d-layer-popup" style="display:none">
           <div class="lp-head">
             <span class="lp-dot"></span>
-            <strong class="lp-name">Kawah Jonggring Saloko</strong>
+            <strong class="lp-name">Kawah Utama &amp; Diatrema</strong>
             <button type="button" class="lp-close" aria-label="Tutup detail">✕</button>
           </div>
           <div class="lp-grid">
@@ -1229,20 +1303,35 @@
           <div class="lp-comp"></div>
         </div>
 
-        <!-- Baris Pil Struktur Semeru & Tombol Kontrol Taktil -->
-        <div class="earth3d-bottom-bar">
-          <div class="earth3d-layer-pills" role="group" aria-label="Pilih Anatomi Gunung Semeru">
-            ${['Kerak Dasar', 'Lereng Semeru', 'Dapur Magma', 'Intrusi Magma', 'Kawah & Pipa'].map(
-              (shortTitle, idx) => `<button type="button" class="e3d-pill" data-part="${idx}">
-                      <i style="background:${PART_DATA[idx].accent}"></i>${shortTitle}
-                    </button>`
-            ).join('')}
-          </div>
-          <div class="earth3d-ctrls">
-            <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi">⏸ Jeda</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan / Satukan Anatomi Gunung Api">🧩 Pisahkan</button>
-            <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label">🏷️ Label</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera">↺ Reset</button>
+        <!-- Unified Glass Island Dock di Bawah (Single-Bar Compact) -->
+        <div class="earth3d-bottom-bar" role="toolbar" aria-label="Kontrol Interaktif Anatomi Gunung Api">
+          <div class="earth3d-dock">
+            <div class="earth3d-layer-pills" role="group" aria-label="Pilih Anatomi Gunung Api">
+              ${['Kerak Dasar', 'Lereng', 'Dapur Magma', 'Intrusi Magma', 'Kawah & Pipa'].map(
+                (shortTitle, idx) => `<button type="button" class="e3d-pill" data-part="${idx}" title="Fokuskan ke ${PART_DATA[idx].name}">
+                        <i style="background:${PART_DATA[idx].accent}"></i><span>${shortTitle}</span>
+                      </button>`
+              ).join('')}
+            </div>
+            <div class="earth3d-dock-divider" aria-hidden="true"></div>
+            <div class="earth3d-ctrls" role="group" aria-label="Alat Viewport">
+              <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi (Spasi)" aria-label="Jeda Animasi">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span class="e3d-btn-label">Jeda</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan Anatomi Gunung Api (P)" aria-label="Pisahkan Anatomi">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg>
+                <span class="e3d-btn-label">Pisahkan</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label (L)" aria-label="Toggle Label">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><circle cx="7" cy="7" r="1.5"></circle></svg>
+                <span class="e3d-btn-label">Label</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera (R)" aria-label="Reset Tampilan">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span class="e3d-btn-label">Reset</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1254,39 +1343,60 @@
       this.simTitleEl = this.wrap.querySelector('.sim-title');
       this.simSubEl = this.wrap.querySelector('.sim-sub');
       this.popupEl = this.wrap.querySelector('.earth3d-layer-popup');
+      if (!this._cleanups) this._cleanups = [];
+      this._dockPicker = createDockPicker({
+        wrap: this.wrap,
+        defaultLabel: 'Bagian',
+        resetLabel: 'Semua Bagian',
+        onClear: () => this.selectPart(null)
+      });
+      this._cleanups.push(() => this._dockPicker?.destroy());
     }
 
     initWebGL() {
-      const gl = this.glCanvas.getContext('webgl', { antialias: true, alpha: true });
+      const gl = this.glCanvas.getContext('webgl', {
+        antialias: this.perf.useAntialias,
+        alpha: this.perf.useAlpha,
+        powerPreference: 'high-performance'
+      });
       this.gl = gl;
+      this.programReady = false;
       if (!gl) return;
 
-      const vs = compileShader(gl, gl.VERTEX_SHADER, VERT_SRC);
-      const fs = compileShader(gl, gl.FRAGMENT_SHADER, FRAG_SRC);
-      const prog = gl.createProgram();
-      gl.attachShader(prog, vs);
-      gl.attachShader(prog, fs);
-      gl.linkProgram(prog);
-      gl.useProgram(prog);
-      this.prog = prog;
-
-      this.attribs = {
-        aPos: gl.getAttribLocation(prog, 'aPos'),
-        aNorm: gl.getAttribLocation(prog, 'aNorm'),
-        aUV: gl.getAttribLocation(prog, 'aUV'),
-        aSurfType: gl.getAttribLocation(prog, 'aSurfType')
-      };
-      this.uniforms = {
-        uMVP: gl.getUniformLocation(prog, 'uMVP'),
-        uOffset: gl.getUniformLocation(prog, 'uOffset'),
-        uPartIndex: gl.getUniformLocation(prog, 'uPartIndex'),
-        uMode: gl.getUniformLocation(prog, 'uMode'),
-        uTime: gl.getUniformLocation(prog, 'uTime'),
-        uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
-        uDim: gl.getUniformLocation(prog, 'uDim'),
-        uEye: gl.getUniformLocation(prog, 'uEye'),
-        uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
-      };
+      const fragSrc = buildMobileFragmentSource(FRAG_SRC, this.perf.shaderMobileLite);
+      this._progHandle = linkProgramAsync(
+        gl,
+        VERT_SRC,
+        fragSrc,
+        (prog, vs, fs) => {
+          if (this.isDestroyed || !this.gl) return;
+          this.vs = vs;
+          this.fs = fs;
+          this.prog = prog;
+          this.attribs = {
+            aPos: gl.getAttribLocation(prog, 'aPos'),
+            aNorm: gl.getAttribLocation(prog, 'aNorm'),
+            aUV: gl.getAttribLocation(prog, 'aUV'),
+            aSurfType: gl.getAttribLocation(prog, 'aSurfType')
+          };
+          this.uniforms = {
+            uMVP: gl.getUniformLocation(prog, 'uMVP'),
+            uOffset: gl.getUniformLocation(prog, 'uOffset'),
+            uPartIndex: gl.getUniformLocation(prog, 'uPartIndex'),
+            uMode: gl.getUniformLocation(prog, 'uMode'),
+            uTime: gl.getUniformLocation(prog, 'uTime'),
+            uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
+            uDim: gl.getUniformLocation(prog, 'uDim'),
+            uEye: gl.getUniformLocation(prog, 'uEye'),
+            uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
+          };
+          this.programReady = true;
+          this._forceHudRedraw = true;
+        }
+      );
+      this.vs = this._progHandle.vs;
+      this.fs = this._progHandle.fs;
+      this.prog = this._progHandle.prog;
 
       this.earthTex = gl.createTexture();
       gl.activeTexture(gl.TEXTURE0);
@@ -1442,28 +1552,40 @@
         this.selectPart(null);
       });
 
+      // Tombol kontrol bawah
       this.wrap.querySelectorAll('.e3d-ctrl-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const act = btn.dataset.action;
           if (act === 'play') {
             this.isPlaying = !this.isPlaying;
             btn.classList.toggle('active', this.isPlaying);
-            btn.innerHTML = this.isPlaying ? '⏸ Jeda' : '▶ Putar';
+            btn.setAttribute('aria-label', this.isPlaying ? 'Jeda Animasi' : 'Putar Animasi');
+            btn.innerHTML = this.isPlaying
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span class="e3d-btn-label">Jeda</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span class="e3d-btn-label">Putar</span>`;
           } else if (act === 'explode') {
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
-            btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            btn.setAttribute('aria-label', this.isExploded ? 'Satukan Anatomi' : 'Pisahkan Anatomi');
+            btn.innerHTML = this.isExploded
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span class="e3d-btn-label">Satukan</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
             if (typeof this.onInspect === 'function') {
               this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
             }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
+            this._forceHudRedraw = true;
             btn.classList.toggle('active', this.showLabels);
           } else if (act === 'reset') {
             this.userInteracting = false;
             this.isExploded = false;
-            this.wrap.querySelector('[data-action="explode"]').classList.remove('active');
-            this.wrap.querySelector('[data-action="explode"]').innerHTML = '🧩 Pisahkan';
+            const expBtn = this.wrap.querySelector('[data-action="explode"]');
+            if (expBtn) {
+              expBtn.classList.remove('active');
+              expBtn.setAttribute('aria-label', 'Pisahkan Anatomi');
+              expBtn.innerHTML = `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
+            }
             this.selectPart(null);
             this.onSlideChange(this.slideIndex);
           }
@@ -1496,9 +1618,11 @@
 
     selectPart(partIdx, fromPill = false) {
       this.selectedPart = partIdx;
+      this._forceHudRedraw = true;
       this.wrap.querySelectorAll('.e3d-pill').forEach((btn, i) => {
         btn.classList.toggle('active', i === partIdx);
       });
+      this._dockPicker?.sync();
 
       if (typeof this.onInspect === 'function' && partIdx !== null && partIdx !== undefined) {
         this.onInspect({ type: 'part', id: partIdx, name: PART_DATA[partIdx]?.name });
@@ -1528,6 +1652,7 @@
 
     onSlideChange(slideIdx) {
       this.slideIndex = Math.max(0, Math.min(SLIDE_MODES.length - 1, slideIdx));
+      this._forceHudRedraw = true;
       const mode = SLIDE_MODES[this.slideIndex];
       this.userInteracting = false;
       this.targetYaw = mode.targetYaw;
@@ -1560,7 +1685,7 @@
         this.targetYaw = 0.62;
         this.targetPitch = 0.28;
         this.targetZoom = 1.0;
-        if (this.simTitleEl) this.simTitleEl.textContent = '🧪 Laboratorium Fisika Magma Semeru';
+        if (this.simTitleEl) this.simTitleEl.textContent = 'Laboratorium Fisika Magma';
         if (this.simSubEl) this.simSubEl.textContent = 'Simulasi real-time interaksi kadar silika (SiO2), viskositas, dan tekanan gas terhadap tipe erupsi.';
       } else {
         this.onSlideChange(this.slideIndex);
@@ -1568,21 +1693,31 @@
     }
 
     resizeIfNeeded() {
+      if (!this._needsResize && this.cssW > 0 && this.cssH > 0) return true;
       const w = this.wrap.clientWidth;
       const h = this.wrap.clientHeight;
       if (w <= 0 || h <= 0) return false;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const pw = Math.round(w * dpr);
-      const ph = Math.round(h * dpr);
+      const rawDpr = window.devicePixelRatio || 1;
+      const glDpr = Math.min(rawDpr, this.perf.maxDpr);
+      const hudDpr = Math.min(rawDpr, this.perf.hudDpr);
+      const pw = Math.round(w * glDpr);
+      const ph = Math.round(h * glDpr);
+      const hpw = Math.round(w * hudDpr);
+      const hph = Math.round(h * hudDpr);
       if (this.glCanvas.width !== pw || this.glCanvas.height !== ph) {
         this.glCanvas.width = pw;
         this.glCanvas.height = ph;
-        this.hudCanvas.width = pw;
-        this.hudCanvas.height = ph;
+      }
+      if (this.hudCanvas.width !== hpw || this.hudCanvas.height !== hph) {
+        this.hudCanvas.width = hpw;
+        this.hudCanvas.height = hph;
       }
       this.cssW = w;
       this.cssH = h;
-      this.dpr = dpr;
+      this.dpr = glDpr;
+      this.hudDpr = hudDpr;
+      this._needsResize = false;
+      this._forceHudRedraw = true;
       return true;
     }
 
@@ -1598,26 +1733,28 @@
         this.rafId = null;
         return;
       }
-      if (document.hidden || (this.cardEl && this.cardEl.offsetParent === null)) {
+      if (document.hidden) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
-      const pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
+      const pageEl = this._pageEl;
       if (pageEl && !pageEl.classList.contains('active')) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
       if (!this.resizeIfNeeded()) {
-        this.isPaused = true;
-        this.rafId = null;
+        if (!this.isDestroyed && !this.isPaused) {
+          this.rafId = requestAnimationFrame(this.animate);
+        }
         return;
       }
       this.rafId = requestAnimationFrame(this.animate);
       if (typeof now !== 'number') now = performance.now();
       const dt = Math.min(0.05, Math.max(0, (now - this.lastFrameTime) * 0.001));
       this.lastFrameTime = now;
+      this._frameCounter++;
 
       
 
@@ -1654,16 +1791,37 @@
       this.lastMVP = mvp;
       this.currentEye = eye;
 
-      this.renderWebGL(mvp, eye);
-      this.renderHUD(mvp, eye);
+      try {
+        if (!this.programReady) return;
+        this.renderWebGL(mvp, eye);
+        const shouldDrawHud =
+          this._forceHudRedraw ||
+          this.isDragging ||
+          this.perf.hudFrameSkip <= 1 ||
+          this._frameCounter % this.perf.hudFrameSkip === 0;
+        if (shouldDrawHud) {
+          this._forceHudRedraw = false;
+          this.renderHUD(mvp, eye);
+        }
+        if (!this._hasFiredReady && typeof this.onReady === 'function') {
+          this._hasFiredReady = true;
+          this.onReady();
+        }
+      } catch (err) {
+        console.warn('VolcanoViewer render frame skipped:', err);
+      }
     }
 
     renderWebGL(mvp, eye) {
       const gl = this.gl;
-      if (!gl) return;
+      if (!gl || !this.programReady || !this.prog) return;
 
       gl.viewport(0, 0, this.glCanvas.width, this.glCanvas.height);
-      gl.clearColor(0, 0, 0, 0);
+      if (this.perf.useAlpha) {
+        gl.clearColor(0, 0, 0, 0);
+      } else {
+        gl.clearColor(0.09, 0.09, 0.13, 1.0);
+      }
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.useProgram(this.prog);
@@ -1681,6 +1839,14 @@
         const off = this.getPartOffset(i);
         const isSel = this.selectedPart === i;
         const isDimmed = this.selectedPart !== null && !isSel;
+
+        // CULL_FACE aktif pada blok dasar & kerucut Semeru CCW (0..1 = ~90% piksel)
+        if (i <= 1) {
+          gl.enable(gl.CULL_FACE);
+          gl.cullFace(gl.BACK);
+        } else {
+          gl.disable(gl.CULL_FACE);
+        }
 
         gl.uniform3fv(this.uniforms.uOffset, off);
         gl.uniform1i(this.uniforms.uPartIndex, i);
@@ -1748,8 +1914,9 @@
       const ctx = this.ctx2d;
       const w = this.cssW;
       const h = this.cssH;
+      const hudDpr = this.hudDpr || this.dpr || 1;
       ctx.save();
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.setTransform(hudDpr, 0, 0, hudDpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
       if (this.sandboxActive) {
@@ -1794,6 +1961,12 @@
       if (regime === 'hawaii') {
         // Rezim 1: Efusif Tenang - Aliran sungai lava pijar menuruni Besuk Kobokan
         const phiFlow = 1.85;
+        const lavaSpr = getPuffSprite('lava', [
+          [0, '#fff3b0'],
+          [0.3, '#ff922b'],
+          [0.7, '#c93b1e'],
+          [1, 'rgba(201, 59, 30, 0)']
+        ]);
         for (let i = 0; i < 16; i++) {
           const t = ((this.simTime * 0.25 + i / 16) % 1.0);
           const r = 0.06 + t * 0.94;
@@ -1803,22 +1976,14 @@
           const p = projectPoint3D([x, y, z], mvp, w, h);
           if (p) {
             const rad = (6 + t * 14) * this.zoom;
-            const grad = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, rad);
-            grad.addColorStop(0, '#fff3b0');
-            grad.addColorStop(0.3, '#ff922b');
-            grad.addColorStop(0.7, '#c93b1e');
-            grad.addColorStop(1, 'rgba(201, 59, 30, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.drawImage(lavaSpr, p.x - rad, p.y - rad, rad * 2, rad * 2);
           }
         }
         this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.25, 'rgba(220, 230, 240, 0.35)');
 
         const lavaPt = projectPoint3D([-0.18, 0.14, 0.65], mvp, w, h);
         if (lavaPt) {
-          this.drawPillTag(ctx, lavaPt.x, lavaPt.y, '🌊 Lelehan Lava Basaltik Encer (Efusif Kilauea)', 'rgba(9, 27, 38, 0.92)', '#ff922b');
+          this.drawPillTag(ctx, lavaPt.x, lavaPt.y, 'Lelehan Lava Basaltik Encer (Efusif)', 'rgba(9, 27, 38, 0.92)', '#ff922b');
         }
       } else if (regime === 'stromboli') {
         // Rezim 2: Stromboli - Air mancur lava pijar & bom vulkanik melontar ke udara
@@ -1849,11 +2014,21 @@
         });
         const stPt = projectPoint3D([0.025, 0.88, 0.032], mvp, w, h);
         if (stPt) {
-          this.drawPillTag(ctx, stPt.x, stPt.y, '🎆 Air Mancur Lava Pijar & Bom Vulkanik', 'rgba(9, 27, 38, 0.92)', '#f7c948');
+          this.drawPillTag(ctx, stPt.x, stPt.y, 'Air Mancur Lava Pijar & Bom Vulkanik', 'rgba(9, 27, 38, 0.92)', '#f7c948');
         }
       } else if (regime === 'plinian') {
         // Rezim 4: Plinian - Kolom stratosferik kolosal dengan payung awan raksasa
         const columnHeight = 1.15;
+        const plinHot = getPuffSprite('plinHot', [
+          [0, 'rgba(255, 120, 40, 0.9)'],
+          [0.6, 'rgba(75, 70, 68, 0.65)'],
+          [1, 'rgba(50, 48, 46, 0)']
+        ]);
+        const plinAsh = getPuffSprite('plinAsh', [
+          [0, 'rgba(110, 102, 98, 0.85)'],
+          [0.6, 'rgba(75, 70, 68, 0.65)'],
+          [1, 'rgba(50, 48, 46, 0)']
+        ]);
         for (let i = 0; i < 24; i++) {
           const t = ((this.simTime * 0.9 + i / 24) % 1.0);
           const y = 0.56 + t * columnHeight;
@@ -1862,24 +2037,22 @@
           const p = projectPoint3D([0.025 + Math.cos(ang) * spread, y, 0.032 + Math.sin(ang) * spread], mvp, w, h);
           if (p) {
             const rad = (14 + t * 44) * this.zoom;
-            const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
-            grad.addColorStop(0, t < 0.2 ? 'rgba(255, 120, 40, 0.9)' : 'rgba(110, 102, 98, 0.85)');
-            grad.addColorStop(0.6, 'rgba(75, 70, 68, 0.65)');
-            grad.addColorStop(1, 'rgba(50, 48, 46, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.drawImage(t < 0.2 ? plinHot : plinAsh, p.x - rad, p.y - rad, rad * 2, rad * 2);
           }
         }
         const plinPt = projectPoint3D([0.025, 1.45, 0.032], mvp, w, h);
         if (plinPt) {
-          this.drawPillTag(ctx, plinPt.x, plinPt.y, '💥 Kolom Abu Stratosferik (>25 km) & Payung Awan', 'rgba(9, 27, 38, 0.94)', '#ff5a36');
+          this.drawPillTag(ctx, plinPt.x, plinPt.y, 'Kolom Abu Stratosferik (>25 km) & Payung Awan', 'rgba(9, 27, 38, 0.94)', '#ff5a36');
         }
       } else {
-        // Rezim 3: Vulkano & Semeru - Kubah lava Jonggring Saloko + awan panas guguran (APG) Besuk Kobokan
+        // Rezim 3: Vulkano - Kubah lava kawah utama + awan panas guguran (APG)
         this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.65, 'rgba(150, 142, 138, 0.75)');
         const phiFlow = 1.85;
+        const pyroSpr = getPuffSprite('pyro', [
+          [0, 'rgba(255, 150, 60, 0.8)'],
+          [0.45, 'rgba(130, 118, 112, 0.72)'],
+          [1, 'rgba(70, 65, 62, 0)']
+        ]);
         for (let i = 0; i < 15; i++) {
           const t = ((this.simTime * 0.7 + i / 15) % 1.0);
           const r = 0.08 + t * 0.92;
@@ -1889,26 +2062,21 @@
           const p = projectPoint3D([x, y, z], mvp, w, h);
           if (p) {
             const rad = (10 + t * 28) * this.zoom;
-            const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
-            grad.addColorStop(0, `rgba(255, 150, 60, ${0.8 * (1 - t * 0.5)})`);
-            grad.addColorStop(0.45, `rgba(130, 118, 112, ${0.72 * (1 - t * 0.35)})`);
-            grad.addColorStop(1, 'rgba(70, 65, 62, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.globalAlpha = topAlpha * (1 - t * 0.42);
+            ctx.drawImage(pyroSpr, p.x - rad, p.y - rad, rad * 2, rad * 2);
           }
         }
+        ctx.globalAlpha = topAlpha;
         const semeruPt = projectPoint3D([-0.16, 0.22, 0.58], mvp, w, h);
         if (semeruPt) {
-          this.drawPillTag(ctx, semeruPt.x, semeruPt.y, '💨 Awan Panas Guguran (Besuk Kobokan)', 'rgba(9, 27, 38, 0.92)', '#ff7b47');
+          this.drawPillTag(ctx, semeruPt.x, semeruPt.y, 'Awan Panas Guguran (Alur Lembah)', 'rgba(9, 27, 38, 0.92)', '#ff7b47');
         }
       }
 
       ctx.restore();
     }
 
-    // Slide 1: Anatomi Gunung Semeru (Mahameru 3.676 mdpl, Jonggring Saloko, Ranu Kumbolo, Flux Melting)
+    // Slide 1: Anatomi Gunung Api Stratovolcano
     drawSemeruAnatomyHUD(ctx, mvp, w, h) {
       const cutAlpha = this.getVisibilityAlpha([0.15, 0.0, 0.15], [0.68, 0.20, 0.70]);
       // Pulsa naiknya magma di sepanjang Pipa Kepundan (Diatrema)
@@ -1932,7 +2100,7 @@
         ctx.restore();
       }
 
-      // Asap fumarol lembut di Kawah Jonggring Saloko
+      // Asap fumarol lembut di kawah utama
       const topAlpha = this.getVisibilityAlpha([0, 0.7, 0], [0, 1, 0]);
       if (topAlpha >= 0.05) {
         ctx.save();
@@ -1942,8 +2110,8 @@
       }
 
       const items = [
-        { pt: [-0.085, 0.72, -0.075], norm: [0.0, 0.95, 0.30],     dy: -20, text: '🏔️ Puncak Mahameru (3.676 mdpl)', bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [-0.56, 0.04, -0.46],   norm: [-0.45, 0.78, -0.42],  dy: 20,  text: '💧 Ranu Kumbolo (2.400 mdpl)',   bg: 'rgba(14,42,58,0.90)', fg: '#38bdf8', dot: '#38bdf8' }
+        { pt: [-0.085, 0.72, -0.075], norm: [0.0, 0.95, 0.30],     dy: -20, text: 'Puncak Kerucut Stratovolcano', bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [-0.56, 0.04, -0.46],   norm: [-0.45, 0.78, -0.42],  dy: 20,  text: 'Danau Vulkanik Lereng',        bg: 'rgba(14,42,58,0.90)', fg: '#38bdf8', dot: '#38bdf8' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -1952,11 +2120,11 @@
     drawPlutonicIntrusionsHUD(ctx, mvp, w, h) {
       const off = this.getPartOffset(3);
       const items = [
-        { pt: [0.34, -0.52, 0.32],                            norm: [0.68, 0.22, 0.70], dy: 20,  text: '🧱 Batolit (>100 km²)',                bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff5a36', dot: '#ff5a36' },
-        { pt: [0.64 + off[0], -0.18 + off[1], 0.02 + off[2]], norm: [0.85, 0.22, 0.48], dy: -20, text: '🍄 Lakolit (Kubah Intrusi)',        bg: 'rgba(9, 27, 38, 0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [-0.02 + off[0], -0.25 + off[1], 0.54 + off[2]], norm: [0.42, 0.22, 0.88], dy: 20, text: '➖ Sill (Intrusi Mendatar)',        bg: 'rgba(9, 27, 38, 0.92)', fg: '#38bdf8', dot: '#38bdf8' },
-        { pt: [-0.01 + off[0], -0.11 + off[1], 0.30 + off[2]], norm: [0.65, 0.22, 0.72], dy: -20, text: '📐 Dike / Korok & Apolisa',        bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff922b', dot: '#ff922b' },
-        { pt: [-0.08, 0.25, 0.54],                            norm: [-0.15, 0.65, 0.74], dy: -20, text: '🌋 Kerucut Samping (Parasitic Cone)', bg: 'rgba(9, 27, 38, 0.92)', fg: '#52b788', dot: '#52b788' }
+        { pt: [0.34, -0.52, 0.32],                            norm: [0.68, 0.22, 0.70], dy: 20,  text: 'Batolit (>100 km²)',               bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff5a36', dot: '#ff5a36' },
+        { pt: [0.64 + off[0], -0.18 + off[1], 0.02 + off[2]], norm: [0.85, 0.22, 0.48], dy: -20, text: 'Lakolit (Kubah Intrusi)',          bg: 'rgba(9, 27, 38, 0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [-0.02 + off[0], -0.25 + off[1], 0.54 + off[2]], norm: [0.42, 0.22, 0.88], dy: 20, text: 'Sill (Intrusi Mendatar)',          bg: 'rgba(9, 27, 38, 0.92)', fg: '#38bdf8', dot: '#38bdf8' },
+        { pt: [-0.01 + off[0], -0.11 + off[1], 0.30 + off[2]], norm: [0.65, 0.22, 0.72], dy: -20, text: 'Dike / Korok & Apolisa',          bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff922b', dot: '#ff922b' },
+        { pt: [-0.08, 0.25, 0.54],                            norm: [-0.15, 0.65, 0.74], dy: -20, text: 'Kerucut Samping (Parasitic Cone)', bg: 'rgba(9, 27, 38, 0.92)', fg: '#52b788', dot: '#52b788' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -1969,7 +2137,7 @@
         ctx.globalAlpha = topAlpha;
         this.drawCraterSmokePuffs(ctx, mvp, w, h, 0.55, 'rgba(200, 215, 228, 0.58)');
 
-        // Lintasan balistik Bom Vulkanik (>64 mm) & Lapili (2-64 mm) dari Kawah Jonggring Saloko
+        // Lintasan balistik Bom Vulkanik (>64 mm) & Lapili (2-64 mm) dari kawah utama
         const trajectories = [
           { vx: 0.45, vz: 0.25, vy: 0.55 },
           { vx: -0.38, vz: 0.42, vy: 0.62 },
@@ -1997,9 +2165,9 @@
       }
 
       const items = [
-        { pt: [0.02, 0.88, 0.03],  norm: [0.0, 0.96, 0.28],   dy: -16, text: '💨 Gas Fumarol/Solfatara (H₂O, SO₂, CO₂, H₂S)', bg: 'rgba(14,42,58,0.92)', fg: '#38bdf8', dot: '#38bdf8' },
-        { pt: [0.38, 0.62, 0.22],  norm: [0.45, 0.78, 0.42],  dy: -16, text: '🪨 Tefra: Bom (>64mm), Lapili & Abu (<2mm)',    bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [-0.18, 0.14, 0.65], norm: [-0.18, 0.62, 0.76], dy: 18,  text: '🔥 Aliran Lava & Lahar Besuk Kobokan',          bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
+        { pt: [0.02, 0.88, 0.03],  norm: [0.0, 0.96, 0.28],   dy: -16, text: 'Gas Fumarol/Solfatara (H₂O, SO₂, CO₂, H₂S)', bg: 'rgba(14,42,58,0.92)', fg: '#38bdf8', dot: '#38bdf8' },
+        { pt: [0.38, 0.62, 0.22],  norm: [0.45, 0.78, 0.42],  dy: -16, text: 'Tefra: Bom (>64mm), Lapili & Abu (<2mm)',    bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [-0.18, 0.14, 0.65], norm: [-0.18, 0.62, 0.76], dy: 18,  text: 'Aliran Lava & Lahar Lembah Lereng',          bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -2008,10 +2176,14 @@
     drawPyroclasticFlowHUD(ctx, mvp, w, h) {
       const flowAlpha = this.getVisibilityAlpha([-0.16, 0.22, 0.58], [-0.18, 0.65, 0.74]);
       const phiFlow = 1.85;
-      // Gumpalan awan panas guguran (APG) meluncur deras menuruni Curah Kobokan
+      // Gumpalan awan panas guguran (APG) meluncur deras menuruni alur lembah
       if (flowAlpha >= 0.05) {
         ctx.save();
-        ctx.globalAlpha = flowAlpha;
+        const apgSpr = getPuffSprite('apgSlide', [
+          [0, 'rgba(255, 165, 70, 0.75)'],
+          [0.45, 'rgba(140, 125, 118, 0.68)'],
+          [1, 'rgba(80, 72, 68, 0)']
+        ]);
         for (let i = 0; i < 12; i++) {
           const t = ((this.simTime * 0.65 + i / 12) % 1.0);
           const r = 0.08 + t * 0.92;
@@ -2021,22 +2193,16 @@
           const p = projectPoint3D([x, y, z], mvp, w, h);
           if (p) {
             const rad = (8 + t * 24) * this.zoom;
-            const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
-            grad.addColorStop(0, `rgba(255, 165, 70, ${0.75 * (1 - t * 0.5)})`);
-            grad.addColorStop(0.45, `rgba(140, 125, 118, ${0.68 * (1 - t * 0.4)})`);
-            grad.addColorStop(1, 'rgba(80, 72, 68, 0)');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.globalAlpha = flowAlpha * (1 - t * 0.45);
+            ctx.drawImage(apgSpr, p.x - rad, p.y - rad, rad * 2, rad * 2);
           }
         }
         ctx.restore();
       }
 
       const items = [
-        { pt: [0.025, 0.62, 0.032], norm: [0.15, 0.92, 0.35],  dy: -20, text: '🟡 Kubah Lava Kawah Jonggring Saloko',                bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [-0.16, 0.22, 0.58],  norm: [-0.18, 0.65, 0.74], dy: 20,  text: '💨 Awan Panas Guguran (Wedhus Gembel / Nuée Ardente)', bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
+        { pt: [0.025, 0.62, 0.032], norm: [0.15, 0.92, 0.35],  dy: -20, text: 'Kubah Lava Kawah Utama',                             bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [-0.16, 0.22, 0.58],  norm: [-0.18, 0.65, 0.74], dy: 20,  text: 'Awan Panas Guguran (Wedhus Gembel / Nuée Ardente)', bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -2049,6 +2215,14 @@
       ctx.save();
       ctx.globalAlpha = topAlpha;
       // Tiang kolom erupsi Plinian menjulang tinggi + tudung payung stratosfer
+      const colHot = getPuffSprite('colHot', [
+        [0, 'rgba(255, 140, 50, 0.85)'],
+        [1, 'rgba(90, 85, 82, 0)']
+      ]);
+      const colAsh = getPuffSprite('colAsh', [
+        [0, 'rgba(175, 168, 162, 0.72)'],
+        [1, 'rgba(90, 85, 82, 0)']
+      ]);
       for (let i = 0; i < 16; i++) {
         const t = ((this.simTime * 0.8 + i / 16) % 1.0);
         const y = 0.56 + t * 0.78;
@@ -2057,24 +2231,18 @@
         const p = projectPoint3D([0.025 + Math.cos(ang) * spread, y, 0.032 + Math.sin(ang) * spread], mvp, w, h);
         if (p) {
           const rad = (12 + t * 34) * this.zoom;
-          const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, rad);
-          grad.addColorStop(0, t < 0.25 ? 'rgba(255, 140, 50, 0.85)' : 'rgba(175, 168, 162, 0.72)');
-          grad.addColorStop(1, 'rgba(90, 85, 82, 0)');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.drawImage(t < 0.25 ? colHot : colAsh, p.x - rad, p.y - rad, rad * 2, rad * 2);
         }
       }
 
       const plinPt = projectPoint3D([0.025, 1.24, 0.032], mvp, w, h);
       if (plinPt) {
-        this.drawPillTag(ctx, plinPt.x, plinPt.y, '🔴 Kolom Erupsi Plinian (Stratosfer >25 km)', 'rgba(14,42,58,0.92)', '#ff5a36');
+        this.drawPillTag(ctx, plinPt.x, plinPt.y, 'Kolom Erupsi Plinian (Stratosfer >25 km)', 'rgba(14,42,58,0.92)', '#ff5a36');
       }
       ctx.restore();
     }
 
-    // Slide 6: Tipe Vulkano (Asap Kembang Kol Semeru/Bromo) & Tipe Pelee (Lateral Blast)
+    // Slide 6: Tipe Vulkano (Asap Kembang Kol) & Tipe Pelee (Lateral Blast)
     drawVulcanianCloudHUD(ctx, mvp, w, h) {
       const topAlpha = this.getVisibilityAlpha([0, 0.7, 0], [0, 0.94, 0.34]);
       if (topAlpha >= 0.05) {
@@ -2085,8 +2253,8 @@
       }
 
       const items = [
-        { pt: [0.025, 0.96, 0.032], norm: [0.0, 0.95, 0.30],  dy: -18, text: '☁️ Tipe Vulkano: Erupsi Asap Kembang Kol (Semeru & Bromo)', bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [0.42, 0.52, 0.0],    norm: [0.65, 0.68, 0.34], dy: 18,  text: '💥 Tipe Pelee: Semburan Awan Panas Lateral',                bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
+        { pt: [0.025, 0.96, 0.032], norm: [0.0, 0.95, 0.30],  dy: -18, text: 'Tipe Vulkano: Erupsi Asap Kembang Kol',     bg: 'rgba(14,42,58,0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [0.42, 0.52, 0.0],    norm: [0.65, 0.68, 0.34], dy: 18,  text: 'Tipe Pelee: Semburan Awan Panas Lateral',  bg: 'rgba(14,42,58,0.92)', fg: '#ff7b47', dot: '#ff7b47' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -2094,10 +2262,10 @@
     // Slide 7: Zona Batuan Beku (Granit Dalam, Porfiri Korok, Andesit & Batu Apung Luar) + Tanah Andosol
     drawIgneousRocksHUD(ctx, mvp, w, h) {
       const items = [
-        { pt: [0.28, -0.52, 0.26],  norm: [0.68, 0.22, 0.70],  dy: 20,  text: '🏛️ Batuan Beku Dalam: Granit (Pendinginan Lambat)',       bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff7b47', dot: '#ff7b47' },
-        { pt: [0.64, -0.20, 0.02],  norm: [0.84, 0.22, 0.48],  dy: -20, text: '📐 Batuan Beku Korok/Gang: Porfiri (Pendinginan Sedang)', bg: 'rgba(9, 27, 38, 0.92)', fg: '#f7c948', dot: '#f7c948' },
-        { pt: [-0.26, 0.44, 0.24],  norm: [-0.38, 0.78, 0.48], dy: -20, text: '🛕 Batuan Beku Luar: Andesit & Batu Apung (Cepat)',       bg: 'rgba(9, 27, 38, 0.92)', fg: '#38bdf8', dot: '#38bdf8' },
-        { pt: [-0.66, -0.02, 0.45], norm: [-0.45, 0.68, 0.58], dy: 20,  text: '🌾 Tanah Andosol Subur & Energi Panas Bumi (Geotermal)',  bg: 'rgba(9, 27, 38, 0.92)', fg: '#52b788', dot: '#52b788' }
+        { pt: [0.28, -0.52, 0.26],  norm: [0.68, 0.22, 0.70],  dy: 20,  text: 'Batuan Beku Dalam: Granit (Pendinginan Lambat)',       bg: 'rgba(9, 27, 38, 0.92)', fg: '#ff7b47', dot: '#ff7b47' },
+        { pt: [0.64, -0.20, 0.02],  norm: [0.84, 0.22, 0.48],  dy: -20, text: 'Batuan Beku Korok/Gang: Porfiri (Pendinginan Sedang)', bg: 'rgba(9, 27, 38, 0.92)', fg: '#f7c948', dot: '#f7c948' },
+        { pt: [-0.26, 0.44, 0.24],  norm: [-0.38, 0.78, 0.48], dy: -20, text: 'Batuan Beku Luar: Andesit & Batu Apung (Cepat)',       bg: 'rgba(9, 27, 38, 0.92)', fg: '#38bdf8', dot: '#38bdf8' },
+        { pt: [-0.66, -0.02, 0.45], norm: [-0.45, 0.68, 0.58], dy: 20,  text: 'Tanah Andosol Subur & Energi Panas Bumi (Geotermal)',  bg: 'rgba(9, 27, 38, 0.92)', fg: '#52b788', dot: '#52b788' }
       ];
       this.drawPillTagList(ctx, items, mvp, w, h);
     }
@@ -2122,18 +2290,18 @@
     drawPartLabels3D(ctx, mvp, w, h) {
       const anchorLocal = [
         [0.84, -0.44, 0.02],      // 0: Kerak Dasar
-        [-0.44, 0.30, 0.32],      // 1: Kerucut Gunung Semeru
+        [-0.44, 0.30, 0.32],      // 1: Kerucut Gunung Api
         [0.28, -0.52, 0.26],      // 2: Dapur Magma & Batolit
         [0.64, -0.18, 0.02],      // 3: Intrusi (Lakolit, Sill, Dike)
-        [0.025, 0.55, 0.032]      // 4: Diatrema & Kawah Jonggring Saloko
+        [0.025, 0.55, 0.032]      // 4: Diatrema & Kawah Utama
       ];
 
       const partNormals = [
         [0.84, 0.18, 0.52],       // 0: Dinding penampang kanan-depan
-        [-0.42, 0.74, 0.52],      // 1: Lereng depan-kiri Semeru
+        [-0.42, 0.74, 0.52],      // 1: Lereng depan-kiri gunung api
         [0.68, 0.22, 0.70],       // 2: Kuadran irisan dalam dapur magma
         [0.80, 0.22, 0.55],       // 3: Kuadran irisan intrusi
-        [0.15, 0.92, 0.35]        // 4: Puncak Kawah Jonggring Saloko
+        [0.15, 0.92, 0.35]        // 4: Puncak kawah utama
       ];
 
       const partAlphas = anchorLocal.map((pt, i) => {
@@ -2154,10 +2322,10 @@
 
       const shortLabels = [
         'Batuan Dasar Kerak',
-        'Lereng Semeru (3.676m)',
+        'Kerucut Stratovolcano',
         'Dapur Magma & Batolit',
         'Intrusi (Lakolit & Sill)',
-        'Kawah Jonggring Saloko'
+        'Kawah Utama & Diatrema'
       ];
 
       const items = [];
@@ -2207,7 +2375,11 @@
       const dotSpace = 12;
       const bh = 22;
       const boxes = projected.map(item => {
-        const tw = ctx.measureText(item.text).width;
+        let tw = this._textWidthCache.get(item.text);
+        if (tw === undefined) {
+          tw = ctx.measureText(item.text).width;
+          this._textWidthCache.set(item.text, tw);
+        }
         const bw = tw + padX * 2 + dotSpace;
         const bx = Math.max(6, Math.min(this.cssW - bw - 6, item.sp.x - bw / 2));
         const by = Math.max(44, Math.min(this.cssH - 80, item.sp.y + item.dy - bh / 2));
@@ -2291,7 +2463,11 @@
       ctx.font = '400 11.5px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
       const padX = 9;
       const dotSpace = 12;
-      const tw = ctx.measureText(text).width;
+      let tw = this._textWidthCache.get(text);
+      if (tw === undefined) {
+        tw = ctx.measureText(text).width;
+        this._textWidthCache.set(text, tw);
+      }
       const bw = tw + padX * 2 + dotSpace;
       const bh = 22;
       const bx = Math.max(6, Math.min(this.cssW - bw - 6, x - bw / 2));
@@ -2317,6 +2493,8 @@
   
     resize() {
       if (!this.isDestroyed && typeof this.resizeIfNeeded === 'function') {
+        this._needsResize = true;
+        this._forceHudRedraw = true;
         return this.resizeIfNeeded();
       }
     }
@@ -2341,6 +2519,15 @@
     destroy() {
       this.isDestroyed = true;
       this.isPaused = true;
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+      if (this._progHandle) {
+        this._progHandle.cancel();
+        this._progHandle = null;
+      }
+      this.programReady = false;
       if (this._cleanups && Array.isArray(this._cleanups)) {
         this._cleanups.forEach(fn => { try { fn(); } catch (e) {} });
         this._cleanups = null;
@@ -2349,51 +2536,70 @@
         try { this._io.disconnect(); } catch (e) {}
         this._io = null;
       }
+      if (this._ro) {
+        try { this._ro.disconnect(); } catch (e) {}
+        this._ro = null;
+      }
       if (typeof pendingViewers !== 'undefined' && Array.isArray(pendingViewers)) {
         const idx = pendingViewers.indexOf(this);
         if (idx !== -1) pendingViewers.splice(idx, 1);
       }
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
       if (this.gl) {
         try {
+          if (this.vs) {
+            try { this.gl.deleteShader(this.vs); } catch (e) {}
+            this.vs = null;
+          }
+          if (this.fs) {
+            try { this.gl.deleteShader(this.fs); } catch (e) {}
+            this.fs = null;
+          }
           if (this.prog) {
-            this.gl.deleteProgram(this.prog);
+            try { this.gl.deleteProgram(this.prog); } catch (e) {}
             this.prog = null;
           }
           if (this.earthTex) {
-            this.gl.deleteTexture(this.earthTex);
+            try { this.gl.deleteTexture(this.earthTex); } catch (e) {}
             this.earthTex = null;
           }
           if (this.materialTex) {
-            this.gl.deleteTexture(this.materialTex);
+            try { this.gl.deleteTexture(this.materialTex); } catch (e) {}
             this.materialTex = null;
           }
           if (this.meshes) {
             this.meshes.forEach(m => {
-              if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
-              if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
-              if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
-              if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
-              if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              try {
+                if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
+                if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
+                if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
+                if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
+                if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              } catch (e) {}
             });
             this.meshes = null;
           }
-        } catch (e) {}
+          releaseWebGLContextAsync(this.gl);
+        } catch (e) {
+          console.warn('WebGL destroy warning:', e);
+        }
+        this.gl = null;
       }
       if (this.glCanvas) {
         this.glCanvas.width = 1;
         this.glCanvas.height = 1;
+        this.glCanvas = null;
       }
       if (this.hudCanvas) {
         this.hudCanvas.width = 1;
         this.hudCanvas.height = 1;
+        this.hudCanvas = null;
       }
+      this.ctx2d = null;
       if (this.wrap && this.wrap.parentNode) {
         this.wrap.parentNode.removeChild(this.wrap);
+        this.wrap = null;
       }
+      this.cardEl = null;
     }
 
 }

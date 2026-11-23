@@ -5,10 +5,10 @@ export const modul3Data: ModuleData = {
   num: 3,
   name: 'Vulkanisme Semeru',
   slug: 'vulkanisme',
-  badge: '03 — Aktivitas Magmatik',
+  badge: '03 · Aktivitas Magmatik',
   title: 'Vulkanisme & Anatomi Gunung Semeru',
   description: 'Menganalisis proses naiknya magma, bentukan intrusi dan ekstrusi, material piroklastik, tipe letusan gunung api, serta genesis batuan beku.',
-  bgImage: '/assets/images/bg_vulkanisme.jpg',
+  bgImage: '/assets/images/bg_vulkanisme.webp',
   slides: [
     {
       number: '1',

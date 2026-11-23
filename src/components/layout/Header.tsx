@@ -106,9 +106,11 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="topbar-actions">
         <div className="partner-banner">
           <img
-            src="/assets/images/Picture1.png"
+            src="/assets/images/Picture1.webp"
             alt="Logo Mitra: Diktisaintek Berdampak, Universitas Negeri Malang, FIS, Departemen Geografi"
             className="topbar-logo-img"
+            width="210"
+            height="42"
           />
         </div>
         <div className="crumb" id="crumb">
@@ -138,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             title="Pasang aplikasi Dinamika Litosfer di PC lab / tablet untuk akses cepat"
           >
-            📲 Pasang App
+            Pasang App
           </button>
         )}
 
@@ -151,7 +153,10 @@ export const Header: React.FC<HeaderProps> = ({
           title={`Pangkat Geolog: ${rank.title} (${progress.xp} XP). Klik untuk melihat lencana.`}
         >
           <span className="rank-btn-icon">{rank.icon}</span>
-          <span className="rank-btn-label">Lv.{rank.level} · {rank.title.split(' ')[0]}</span>
+          <span className="rank-btn-label">
+            Lv.{rank.level}
+            <span className="rank-btn-title"> · {rank.title.split(' ')[0]}</span>
+          </span>
           <span className="rank-btn-badge-count">{unlockedBadgesCount}/5</span>
         </button>
 
@@ -163,7 +168,7 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={handleShortcutsClick}
           title="Panduan Pintasan Papan Ketik Guru & Siswa (Tekan ?)"
         >
-          ⌨️ Pintasan
+          Pintasan
         </button>
 
         {/* Audio Mute / Unmute Toggle Button */}

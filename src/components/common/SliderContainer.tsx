@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Slide } from '../../types';
 import { sound } from '../../utils/soundEffects';
 import { InquiryChallenge } from '../../data/inquiryChallenges';
@@ -43,6 +43,28 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
   const progressPct = total > 0 ? ((safeIdx + 1) / total) * 100 : 0;
   const isChallengeActive = !!(inquiryChallenge && inquiryChallenge.targetSlide === safeIdx);
   const isLocked = isChallengeActive && !isInquiryCompleted;
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return;
+    swipeStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!swipeStartRef.current || e.changedTouches.length === 0) return;
+    const dx = e.changedTouches[0].clientX - swipeStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - swipeStartRef.current.y;
+    swipeStartRef.current = null;
+
+    if (Math.abs(dx) < 52 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
+    if (dx < 0 && !isLast && !isLocked) {
+      sound.slideWhoosh();
+      onSlideChange(safeIdx + 1);
+    } else if (dx > 0 && !isFirst) {
+      sound.slideWhoosh();
+      onSlideChange(safeIdx - 1);
+    }
+  };
 
   const handlePrev = () => {
     if (!isFirst) {
@@ -75,10 +97,16 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
         </div>
       </div>
 
-      <div className="slider-body">
+      <div
+        className="slider-body"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="slide-item active">
-          <h3>{slide.title}</h3>
-          <p>{slide.desc}</p>
+          <div className="slide-intro">
+            <h3>{slide.title}</h3>
+            <p>{slide.desc}</p>
+          </div>
 
           {/* Gerbang Inkuiri 3D Interaktif jika slide ini memiliki misi kebumian */}
           {isChallengeActive && inquiryChallenge && (
@@ -116,10 +144,10 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
           {topicTag.includes('Geomorfologi') && currentSlide === 4 && (
             <svg
               className="rock-cycle"
-              viewBox="0 0 420 190"
+              viewBox="0 0 380 140"
               role="img"
               aria-label="Diagram siklus batuan: magma, batuan beku, batuan sedimen, batuan metamorf"
-              style={{ width: '100%', maxWidth: '420px', margin: '14px auto', display: 'block' }}
+              style={{ width: '100%', maxWidth: '340px', height: '115px', margin: '6px auto', display: 'block' }}
             >
               <defs>
                 <marker
@@ -127,37 +155,37 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
                   viewBox="0 0 10 10"
                   refX="8"
                   refY="5"
-                  markerWidth="7"
-                  markerHeight="7"
+                  markerWidth="6"
+                  markerHeight="6"
                   orient="auto-start-reverse"
                 >
                   <path d="M0 0 L10 5 L0 10 z" fill="#c3c3cc" />
                 </marker>
               </defs>
-              <g fill="none" stroke="#70707d" strokeWidth="1.5" markerEnd="url(#rc-arrow)">
-                <path d="M265 23 Q355 23 355 76" />
-                <path d="M355 108 Q355 163 267 163" />
-                <path d="M155 163 Q65 163 65 110" />
-                <path d="M65 76 Q65 23 153 23" />
+              <g fill="none" stroke="#70707d" strokeWidth="1.2" markerEnd="url(#rc-arrow)">
+                <path d="M245 18 Q325 18 325 56" />
+                <path d="M325 84 Q325 122 247 122" />
+                <path d="M135 122 Q55 122 55 84" />
+                <path d="M55 56 Q55 18 133 18" />
               </g>
-              <g fontSize="11.5" fontWeight="480" textAnchor="middle">
-                <rect x="155" y="8" width="110" height="30" rx="15" fill="#5266eb" />
-                <text x="210" y="27" fill="#ffffff">Magma</text>
+              <g fontSize="10.5" fontWeight="500" textAnchor="middle">
+                <rect x="140" y="6" width="100" height="24" rx="12" fill="#5266eb" />
+                <text x="190" y="22" fill="#ffffff">Magma</text>
 
-                <rect x="300" y="78" width="110" height="30" rx="15" fill="#272735" stroke="#70707d" strokeWidth="1" />
-                <text x="355" y="97" fill="#ededf3">Batuan Beku</text>
+                <rect x="270" y="58" width="100" height="24" rx="12" fill="#272735" stroke="#70707d" strokeWidth="1" />
+                <text x="320" y="74" fill="#ededf3">Batuan Beku</text>
 
-                <rect x="155" y="148" width="110" height="30" rx="15" fill="#272735" stroke="#70707d" strokeWidth="1" />
-                <text x="210" y="167" fill="#ededf3">Batuan Sedimen</text>
+                <rect x="140" y="110" width="100" height="24" rx="12" fill="#272735" stroke="#70707d" strokeWidth="1" />
+                <text x="190" y="126" fill="#ededf3">Batuan Sedimen</text>
 
-                <rect x="10" y="78" width="110" height="30" rx="15" fill="#272735" stroke="#70707d" strokeWidth="1" />
-                <text x="65" y="97" fill="#ededf3">Batuan Metamorf</text>
+                <rect x="10" y="58" width="100" height="24" rx="12" fill="#272735" stroke="#70707d" strokeWidth="1" />
+                <text x="60" y="74" fill="#ededf3">Batuan Metamorf</text>
               </g>
-              <g fontSize="10.5" fontWeight="400" fill="#c3c3cc">
-                <text x="295" y="46">Pembekuan</text>
-                <text x="280" y="184">Pelapukan &amp; litifikasi</text>
-                <text x="14" y="140">Tekanan &amp; suhu</text>
-                <text x="18" y="46">Pelelehan</text>
+              <g fontSize="9.5" fontWeight="400" fill="#9c9cb2">
+                <text x="270" y="36">Pembekuan</text>
+                <text x="250" y="136">Pelapukan &amp; litifikasi</text>
+                <text x="16" y="104">Tekanan &amp; suhu</text>
+                <text x="18" y="36">Pelelehan</text>
               </g>
             </svg>
           )}
@@ -190,7 +218,7 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
           onClick={handlePrev}
           disabled={isFirst}
         >
-          ← Sebelumnya
+          Sebelumnya
         </button>
         <button
           type="button"
@@ -200,10 +228,10 @@ export const SliderContainer: React.FC<SliderContainerProps> = ({
           title={isLocked ? 'Selesaikan investigasi 3D di sebelah kiri untuk membuka materi' : undefined}
         >
           {isLocked
-            ? '🔒 Selesaikan Misi Inkuiri'
+            ? 'Selesaikan Misi Inkuiri'
             : isLast
             ? nextCtaLabel
-            : 'Berikutnya →'}
+            : 'Berikutnya'}
         </button>
       </div>
     </div>

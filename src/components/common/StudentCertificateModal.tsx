@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { progressStore, getRankTitle, ProgressData } from '../../data/progressStore';
+import { QUIZ_QUESTIONS } from '../../data/quiz';
 import { sound } from '../../utils/soundEffects';
 
 interface StudentCertificateModalProps {
@@ -71,7 +72,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
   const challengesCount = challenges.length;
   const quiz = data.quizResult || {
     score: 0,
-    total: 13,
+    total: QUIZ_QUESTIONS.length,
     percentage: 0,
     completedAt: new Date().toLocaleDateString('id-ID', {
       year: 'numeric',
@@ -98,7 +99,6 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
     >
       <div className="refs-head no-print">
         <div className="shortcuts-modal-title">
-          <span className="shortcuts-title-icon">📄</span>
           <div>
             <h3 id="cert-modal-title">Portofolio Asesmen Belajar Geografi</h3>
             <p className="shortcuts-title-sub">
@@ -123,7 +123,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
         {/* Form Identitas Peserta Didik (Hanya tampil di layar) */}
         <div className="cert-identity-form no-print">
           <div className="cert-form-title">
-            <span>✏️ IDENTITAS PESERTA DIDIK (Lengkapi sebelum mencetak)</span>
+            <span>IDENTITAS PESERTA DIDIK (Lengkapi sebelum mencetak)</span>
           </div>
           <div className="cert-form-grid">
             <div className="cert-form-field">
@@ -159,7 +159,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
           </div>
         </div>
 
-        {/* ================= DOKUMEN CETAK A4 (Printable Sheet) ================= */}
+        {/* Dokumen Cetak A4 (Printable Sheet) */}
         <div className="certificate-sheet" id="certificate-printable">
           {/* KOP RESMI UNIVERSITAS NEGERI MALANG */}
           <div className="cert-doc-header">
@@ -167,6 +167,8 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
               src="/assets/images/Lambang-UM.webp"
               alt="Lambang Universitas Negeri Malang"
               className="cert-um-logo"
+              width="72"
+              height="72"
             />
             <div className="cert-institution-text">
               <h4>KEMENTERIAN PENDIDIKAN TINGGI, SAINS, DAN TEKNOLOGI</h4>
@@ -186,7 +188,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
           </div>
 
           {/* TABEL IDENTITAS SISWA */}
-          <div className="cert-info-box">
+          <div className="cert-info-box cert-table-scroll">
             <table className="cert-info-table">
               <tbody>
                 <tr>
@@ -195,7 +197,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
                   <td className="val"><strong>{name || '__________________________'}</strong></td>
                   <td className="lbl">Tanggal Asesmen</td>
                   <td className="sep">:</td>
-                  <td className="val">{quiz.completedAt || '—'}</td>
+                  <td className="val">{quiz.completedAt || '-'}</td>
                 </tr>
                 <tr>
                   <td className="lbl">Kelas / Rombel</td>
@@ -218,7 +220,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
           </div>
 
           {/* HASIL KUIS DAN CAPAIAN NILAI */}
-          <div className="cert-section-title">I. REKAPITULASI HASIL ASESMEN FORMATIF (13 SOAL)</div>
+          <div className="cert-section-title">I. REKAPITULASI HASIL ASESMEN FORMATIF ({QUIZ_QUESTIONS.length} SOAL)</div>
           <div className="cert-score-grid">
             <div className="cert-score-card">
               <span className="sc-lbl">Jawaban Benar</span>
@@ -244,58 +246,60 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
           <div className="cert-section-title">
             II. PENGUASAAN SUB-TOPIK &amp; EKSPLORASI INKUIRI 3D ({challengesCount} / 4 Misi Tuntas)
           </div>
-          <table className="cert-topic-table">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Sub-Topik Pembelajaran</th>
-                <th>Investigasi Objek 3D &amp; Inkuiri</th>
-                <th>Status Kompetensi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>Struktur Interior Bumi &amp; Seismik P/S</td>
-                <td>Misi Geodynamo: Konveksi Logam Inti Luar Cair</td>
-                <td>
-                  <span className="check">
-                    {challenges.includes('inquiry-struktur') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Dinamika Lempeng Tektonik &amp; Batas Kerak</td>
-                <td>Misi Megathrust: Geometri Slab Penunjaman Samudra</td>
-                <td>
-                  <span className="check">
-                    {challenges.includes('inquiry-lempeng') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>Vulkanisme Semeru &amp; Karakteristik Erupsi</td>
-                <td>Misi Dapur Magma: Pelacakan Batolit Mahameru</td>
-                <td>
-                  <span className="check">
-                    {challenges.includes('inquiry-vulkanisme') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>Tenaga Endogen &amp; Siklus Petrologi</td>
-                <td>Misi Graben: Amblasan Blok Patahan Sianok</td>
-                <td>
-                  <span className="check">
-                    {challenges.includes('inquiry-endogen') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="cert-table-scroll">
+            <table className="cert-topic-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Sub-Topik Pembelajaran</th>
+                  <th>Investigasi Objek 3D &amp; Inkuiri</th>
+                  <th>Status Kompetensi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>Struktur Interior Bumi &amp; Seismik P/S</td>
+                  <td>Misi Geodynamo: Konveksi Logam Inti Luar Cair</td>
+                  <td>
+                    <span className="check">
+                      {challenges.includes('inquiry-struktur') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>Dinamika Lempeng Tektonik &amp; Batas Kerak</td>
+                  <td>Misi Megathrust: Geometri Slab Penunjaman Samudra</td>
+                  <td>
+                    <span className="check">
+                      {challenges.includes('inquiry-lempeng') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>Vulkanisme Semeru &amp; Karakteristik Erupsi</td>
+                  <td>Misi Dapur Magma: Pelacakan Batolit Mahameru</td>
+                  <td>
+                    <span className="check">
+                      {challenges.includes('inquiry-vulkanisme') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>Tenaga Endogen &amp; Siklus Petrologi</td>
+                  <td>Misi Graben: Amblasan Blok Patahan Sianok</td>
+                  <td>
+                    <span className="check">
+                      {challenges.includes('inquiry-endogen') ? '✓ Inkuiri Tuntas (+75 XP)' : '✓ Diselesaikan'}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           {/* LENCANA PRESTASI YANG DIPEROLEH */}
           <div className="cert-section-title">III. LENCANA PRESTASI KOMPETENSI (BADGES EARNED)</div>
@@ -334,7 +338,7 @@ export const StudentCertificateModal: React.FC<StudentCertificateModalProps> = (
           className="btn btn-magma"
           onClick={handlePrint}
         >
-          🖨️ Cetak / Simpan PDF (A4)
+          Cetak / Simpan PDF (A4)
         </button>
         <button
           type="button"

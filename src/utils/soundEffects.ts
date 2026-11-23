@@ -1,7 +1,4 @@
-// ==========================================================================
-// PROCEDURAL WEB AUDIO ENGINE - DINAMIKA LITOSFER
-// Murni procedural Web Audio API (0 KB file eksternal, anti-lag, 60fps safe)
-// ==========================================================================
+// Procedural Web Audio Engine: Murni Web Audio API (0 KB file eksternal, anti-lag)
 
 const STORAGE_MUTE_KEY = 'dinamika_litosfer_sound_muted';
 
@@ -9,6 +6,8 @@ class SoundEffectsEngine {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
   private _isMuted: boolean = false;
+  private _hasGesture: boolean = false;
+  private _gestureBound: boolean = false;
 
   constructor() {
     try {
@@ -17,6 +16,66 @@ class SoundEffectsEngine {
     } catch {
       this._isMuted = false;
     }
+    this.bindGestureUnlock();
+  }
+
+  private isUserActivated(): boolean {
+    if (this._hasGesture) return true;
+    const ua = typeof navigator !== 'undefined' ? (navigator as unknown as { userActivation?: { hasBeenActive?: boolean } }).userActivation : undefined;
+    if (ua?.hasBeenActive) {
+      this._hasGesture = true;
+      return true;
+    }
+    return false;
+  }
+
+  private bindGestureUnlock(): void {
+    if (this._gestureBound || typeof window === 'undefined') return;
+    this._gestureBound = true;
+
+    const cleanup = () => {
+      window.removeEventListener('click', onGesture, true);
+      window.removeEventListener('keydown', onGesture, true);
+      window.removeEventListener('pointerup', onGesture, true);
+    };
+
+    const onGesture = () => {
+      this._hasGesture = true;
+      if (this._isMuted) return;
+
+      const ctx = this.ctx || this.createContext();
+      if (!ctx) return;
+
+      if (ctx.state === 'suspended') {
+        ctx
+          .resume()
+          .then(() => {
+            if (ctx.state === 'running') cleanup();
+          })
+          .catch(() => {});
+      } else if (ctx.state === 'running') {
+        cleanup();
+      }
+    };
+
+    window.addEventListener('click', onGesture, { capture: true, passive: true });
+    window.addEventListener('keydown', onGesture, { capture: true, passive: true });
+    window.addEventListener('pointerup', onGesture, { capture: true, passive: true });
+  }
+
+  private createContext(): AudioContext | null {
+    if (this.ctx) return this.ctx;
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return null;
+
+    this.ctx = new AudioCtx();
+    this.masterGain = this.ctx.createGain();
+    // Kalibrasi volume aman untuk proyektor & speaker sekolah (-14dB / ~0.15)
+    this.masterGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+    this.masterGain.connect(this.ctx.destination);
+    return this.ctx;
   }
 
   public get isMuted(): boolean {
@@ -25,25 +84,25 @@ class SoundEffectsEngine {
 
   private ensureContext(): AudioContext | null {
     if (this._isMuted) return null;
+    if (!this.isUserActivated()) return null;
 
-    if (!this.ctx) {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return null;
+    const ctx = this.createContext();
+    if (!ctx) return null;
 
-      this.ctx = new AudioCtx();
-      this.masterGain = this.ctx.createGain();
-      // Kalibrasi volume aman untuk proyektor & speaker sekolah (-14dB / ~0.15)
-      this.masterGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
+    if (ctx.state === 'suspended') {
+      const ua =
+        typeof navigator !== 'undefined'
+          ? (navigator as unknown as { userActivation?: { isActive?: boolean } }).userActivation
+          : undefined;
+      if (ua?.isActive) {
+        ctx.resume().catch(() => {});
+      }
+      if ((ctx.state as string) !== 'running') {
+        return null;
+      }
     }
 
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume().catch(() => {});
-    }
-
-    return this.ctx;
+    return ctx;
   }
 
   public setMuted(muted: boolean): void {

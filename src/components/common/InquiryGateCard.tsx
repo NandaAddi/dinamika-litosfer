@@ -34,7 +34,6 @@ export const InquiryGateCard: React.FC<InquiryGateCardProps> = ({
     >
       <div className="inquiry-gate-header">
         <div className="inquiry-badge-tag">
-          <span className="inquiry-badge-icon">🎯</span>
           <span>{challenge.badge}</span>
         </div>
         <div className="inquiry-xp-pill">
@@ -62,7 +61,7 @@ export const InquiryGateCard: React.FC<InquiryGateCardProps> = ({
               onClick={handleToggleHint}
               aria-expanded={showHint}
             >
-              {showHint ? 'Tutup Petunjuk ▲' : '💡 Butuh Petunjuk? ▼'}
+              {showHint ? 'Tutup Petunjuk ▲' : 'Butuh Petunjuk? ▼'}
             </button>
 
             <button
@@ -71,7 +70,7 @@ export const InquiryGateCard: React.FC<InquiryGateCardProps> = ({
               onClick={handleBypassClick}
               title="Lewati tantangan inkuiri (Mode Guru / Akses Cepat)"
             >
-              Lewati Tantangan ➔
+              Lewati Tantangan
             </button>
           </div>
 
@@ -84,7 +83,7 @@ export const InquiryGateCard: React.FC<InquiryGateCardProps> = ({
       ) : (
         <div className="inquiry-success-body">
           <div className="inquiry-success-banner">
-            <span className="success-icon">✨</span>
+            <span className="success-icon">✓</span>
             <div>
               <strong>{challenge.revealedKnowledge.headline}</strong>
               <p>{challenge.revealedKnowledge.fact}</p>
@@ -92,12 +91,12 @@ export const InquiryGateCard: React.FC<InquiryGateCardProps> = ({
           </div>
 
           <div className="inquiry-significance-box">
-            <span className="box-title">🔬 Signifikansi Geologis & Kebencanaan:</span>
+            <span className="box-title">Signifikansi Geologis &amp; Kebencanaan:</span>
             <p>{challenge.revealedKnowledge.significance}</p>
           </div>
 
           <div className="inquiry-reflection-box">
-            <span className="box-title">💭 Pertanyaan Pemantik Refleksi (Diskusi Kelas):</span>
+            <span className="box-title">Pertanyaan Pemantik Refleksi (Diskusi Kelas):</span>
             <p className="reflection-text">"{challenge.reflectionPrompt}"</p>
           </div>
         </div>

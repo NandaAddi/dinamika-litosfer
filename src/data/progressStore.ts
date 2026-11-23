@@ -1,7 +1,4 @@
-// ==========================================================================
-// STUDENT PROGRESS & GAMIFICATION STORE - DINAMIKA LITOSFER
-// LocalStorage Persistence + Event Subscriber Pattern
-// ==========================================================================
+// Progress & Gamification Store: LocalStorage Persistence + Event Subscriber Pattern
 
 export interface BadgeInfo {
   id: string;
@@ -23,6 +20,7 @@ export interface StudentProfile {
 export interface ProgressData {
   profile: StudentProfile;
   xp: number;
+  bestQuizScore: number;
   completedModules: string[];
   completedChallenges: string[];
   badges: Record<string, BadgeInfo>;
@@ -42,7 +40,7 @@ export const INITIAL_BADGES: Record<string, BadgeInfo> = {
     title: 'Seismologist Muda',
     subtitle: 'Analisis Interior Bumi & Gelombang Seismik P & S',
     topic: 'Struktur Lapisan Bumi',
-    icon: '🌍',
+    icon: '◐',
     unlocked: false,
     unlockedAt: null,
     xpReward: 150
@@ -52,7 +50,7 @@ export const INITIAL_BADGES: Record<string, BadgeInfo> = {
     title: 'Kartografer Lempeng',
     subtitle: 'Rekonstruksi Superbenua Pangea & Batas Tektonik',
     topic: 'Lempeng Tektonik',
-    icon: '🧩',
+    icon: '◫',
     unlocked: false,
     unlockedAt: null,
     xpReward: 150
@@ -62,7 +60,7 @@ export const INITIAL_BADGES: Record<string, BadgeInfo> = {
     title: 'Vulkanolog Semeru',
     subtitle: 'Eksplorasi Dapur Magma & Mitigasi Awan Panas',
     topic: 'Vulkanisme Semeru',
-    icon: '🌋',
+    icon: '△',
     unlocked: false,
     unlockedAt: null,
     xpReward: 150
@@ -72,7 +70,7 @@ export const INITIAL_BADGES: Record<string, BadgeInfo> = {
     title: 'Spesialis Geomorfologi',
     subtitle: 'Identifikasi Deformasi Sesar & Siklus Batuan',
     topic: 'Tenaga Endogen',
-    icon: '⛰️',
+    icon: '◬',
     unlocked: false,
     unlockedAt: null,
     xpReward: 150
@@ -82,27 +80,35 @@ export const INITIAL_BADGES: Record<string, BadgeInfo> = {
     title: 'Grand Master Litosfer',
     subtitle: 'Lulus Kuis Evaluasi Formatif dengan Nilai ≥ 80%',
     topic: 'Evaluasi Kebumian',
-    icon: '🏆',
+    icon: '★',
     unlocked: false,
     unlockedAt: null,
     xpReward: 250
   }
 };
 
+function createInitialBadges(): Record<string, BadgeInfo> {
+  const clone: Record<string, BadgeInfo> = {};
+  Object.keys(INITIAL_BADGES).forEach((k) => {
+    clone[k] = { ...INITIAL_BADGES[k] };
+  });
+  return clone;
+}
+
 export function getRankTitle(xp: number): { title: string; level: number; nextXp: number; icon: string } {
   if (xp >= 800) {
-    return { title: 'Master Geologist Nusantara', level: 5, nextXp: 1000, icon: '👑' };
+    return { title: 'Master Geologist Nusantara', level: 5, nextXp: 1000, icon: '★' };
   }
   if (xp >= 600) {
-    return { title: 'Volcanology Specialist', level: 4, nextXp: 800, icon: '🌋' };
+    return { title: 'Volcanology Specialist', level: 4, nextXp: 800, icon: '△' };
   }
   if (xp >= 400) {
-    return { title: 'Tectonic Surveyor', level: 3, nextXp: 600, icon: '🧭' };
+    return { title: 'Tectonic Surveyor', level: 3, nextXp: 600, icon: '◈' };
   }
   if (xp >= 200) {
-    return { title: 'Junior Seismologist', level: 2, nextXp: 400, icon: '🔬' };
+    return { title: 'Junior Seismologist', level: 2, nextXp: 400, icon: '◐' };
   }
-  return { title: 'Novice Explorer', level: 1, nextXp: 200, icon: '🌱' };
+  return { title: 'Novice Explorer', level: 1, nextXp: 200, icon: '◇' };
 }
 
 class ProgressStore {
@@ -112,6 +118,14 @@ class ProgressStore {
 
   constructor() {
     this.data = this.loadFromStorage();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY) {
+          this.data = this.loadFromStorage();
+          this.notify();
+        }
+      });
+    }
   }
 
   private loadFromStorage(): ProgressData {
@@ -119,8 +133,8 @@ class ProgressStore {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        // Merge badges in case new badges were added
-        const mergedBadges = { ...INITIAL_BADGES };
+        // Deep clone badges agar INITIAL_BADGES tidak pernah termutasi
+        const mergedBadges = createInitialBadges();
         if (parsed.badges) {
           Object.keys(parsed.badges).forEach((k) => {
             if (mergedBadges[k]) {
@@ -128,9 +142,13 @@ class ProgressStore {
             }
           });
         }
+        const savedBest = typeof parsed.bestQuizScore === 'number'
+          ? parsed.bestQuizScore
+          : (typeof parsed.quizResult?.score === 'number' ? parsed.quizResult.score : 0);
         return {
           profile: parsed.profile || { name: '', school: '', className: '' },
           xp: typeof parsed.xp === 'number' ? parsed.xp : 0,
+          bestQuizScore: savedBest,
           completedModules: Array.isArray(parsed.completedModules) ? parsed.completedModules : [],
           completedChallenges: Array.isArray(parsed.completedChallenges) ? parsed.completedChallenges : [],
           badges: mergedBadges,
@@ -142,9 +160,10 @@ class ProgressStore {
     return {
       profile: { name: '', school: '', className: '' },
       xp: 0,
+      bestQuizScore: 0,
       completedModules: [],
       completedChallenges: [],
-      badges: { ...INITIAL_BADGES },
+      badges: createInitialBadges(),
       quizResult: null
     };
   }
@@ -246,6 +265,12 @@ class ProgressStore {
 
   public saveQuizScore(score: number, total: number): void {
     const percentage = Math.round((score / total) * 100);
+    const prevBest = this.data.bestQuizScore || 0;
+    const scoreGain = Math.max(0, score - prevBest);
+    if (score > prevBest) {
+      this.data.bestQuizScore = score;
+    }
+
     this.data.quizResult = {
       score,
       total,
@@ -259,11 +284,13 @@ class ProgressStore {
       })
     };
 
-    // Tambah XP berdasarkan jawaban benar (+20 XP per jawaban benar)
-    this.addXP(score * 20);
+    // Beri +20 XP hanya untuk peningkatan skor terbaik (cegah duplikasi XP saat mengulang kuis)
+    if (scoreGain > 0) {
+      this.data.xp += scoreGain * 20;
+    }
 
     // Buka badge Master jika skor >= 80%
-    if (percentage >= 80) {
+    if (percentage >= 80 && !this.data.badges.master?.unlocked) {
       this.unlockBadge('master');
     } else {
       this.save();
@@ -274,9 +301,10 @@ class ProgressStore {
     this.data = {
       profile: { name: '', school: '', className: '' },
       xp: 0,
+      bestQuizScore: 0,
       completedModules: [],
       completedChallenges: [],
-      badges: { ...INITIAL_BADGES },
+      badges: createInitialBadges(),
       quizResult: null
     };
     try {

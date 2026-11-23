@@ -15,6 +15,10 @@
      * Slide 5: Batas Transform & Sistem Sesar Geser (Sesar Semangko, Palu-Koro, Lembang)
    ========================================================================== */
 /* ES Module Export */
+import { getDevicePerfProfile, buildMobileFragmentSource } from '../../utils/devicePerf';
+import { linkProgramAsync, releaseWebGLContextAsync } from '../../utils/webglAsync';
+import { createDockPicker } from '../../utils/dockPicker';
+
   const PART_DATA = [
     {
       id: 'astenosfer',
@@ -68,7 +72,7 @@
       id: 'samudra-palung',
       index: 4,
       name: 'Cekungan Samudra & Palung (Trench)',
-      depth: '4 – 10 km (Palung Sunda ~7.200 m)',
+      depth: '4 – 10+ km (Zona Palung Subduksi)',
       temp: '2 – 26 °C (Hidrosfer)',
       state: 'Cair (Perairan Samudra di Atas Kerak SiMa)',
       comp: 'Air Laut di Atas Pematang Tengah Samudra & Palung Subduksi',
@@ -82,8 +86,8 @@
     {
       id: 'wegener',
       modeInt: 0,
-      badge: '🧩 Hipotesis Continental Drift (Pangaea 1912)',
-      hint: 'Kesesuaian garis pantai Amerika Selatan–Afrika & bukti sabuk fosil Glossopteris–Mesosaurus.',
+      badge: 'Hipotesis Continental Drift (Pangaea 1912)',
+      hint: 'Kesesuaian garis pantai benua yang saling berhadapan & bukti sabuk fosil Glossopteris–Mesosaurus.',
       targetYaw: 0.18,
       targetPitch: 0.48,
       targetZoom: 1.02,
@@ -92,7 +96,7 @@
     {
       id: 'penggerak',
       modeInt: 1,
-      badge: '⚡ 3 Gaya Penggerak Lempeng (Hess)',
+      badge: '3 Gaya Penggerak Lempeng (Hess)',
       hint: 'Kombinasi Konveksi Mantel Termal, dorongan Ridge Push di pematang, dan tarikan Slab Pull di palung.',
       targetYaw: 0.24,
       targetPitch: 0.32,
@@ -102,8 +106,8 @@
     {
       id: 'konvergen',
       modeInt: 2,
-      badge: '🌋 Batas Konvergen: Subduksi, Palung Sunda & Megathrust',
-      hint: 'Lempeng Indo-Australia (SiMa) menunjam di bawah Lempeng Eurasia (SiAl), memicu gempa & busur gunung api.',
+      badge: 'Batas Konvergen: Subduksi, Palung & Megathrust',
+      hint: 'Lempeng Samudra (SiMa) menunjam di bawah Lempeng Benua (SiAl), memicu gempa & busur gunung api.',
       targetYaw: 0.32,
       targetPitch: 0.28,
       targetZoom: 1.10,
@@ -112,7 +116,7 @@
     {
       id: 'divergen',
       modeInt: 3,
-      badge: '⛰️ Batas Divergen: Pemekaran Dasar Samudra (Spreading)',
+      badge: 'Batas Divergen: Pemekaran Dasar Samudra (Spreading)',
       hint: 'Dua lempeng saling menjauh di Mid-Oceanic Ridge; magma astenosfer naik membentuk kerak samudra baru.',
       targetYaw: -0.28,
       targetPitch: 0.34,
@@ -122,8 +126,8 @@
     {
       id: 'transform',
       modeInt: 4,
-      badge: '⚠️ Batas Transform: Sesar Geser (Strike-Slip)',
-      hint: 'Dua blok lempeng bergeser mendatar berlawanan arah (Sesar Semangko, Palu-Koro, Lembang, San Andreas).',
+      badge: 'Batas Transform: Sesar Geser (Strike-Slip)',
+      hint: 'Dua blok lempeng bergeser mendatar berlawanan arah membentuk zona patahan geser aktif.',
       targetYaw: 0.08,
       targetPitch: 0.52,
       targetZoom: 1.08,
@@ -868,7 +872,11 @@
     float fbm(vec3 p) {
       float v = 0.0;
       float a = 0.5;
+      #ifdef MOBILE_LITE
+      for (int i = 0; i < 2; i++) {
+      #else
       for (int i = 0; i < 4; i++) {
+      #endif
         v += a * noise(p);
         p = p * 2.04 + vec3(1.7, 9.2, 5.4);
         a *= 0.5;
@@ -879,12 +887,21 @@
     // Perturbasi normal 3D analitik untuk detail mikro-relief pegunungan, lantai samudra & batuan irisan
     vec3 perturbNormal(vec3 N, vec3 p, float scale, float strength) {
       vec2 e = vec2(0.011, 0.0);
+      #ifdef MOBILE_LITE
+      float h0 = noise(p * scale);
+      vec3 grad = vec3(
+        noise((p + e.xyy) * scale) - h0,
+        noise((p + e.yxy) * scale) - h0,
+        noise((p + e.yyx) * scale) - h0
+      ) / e.x;
+      #else
       float h0 = fbm(p * scale);
       vec3 grad = vec3(
         fbm((p + e.xyy) * scale) - h0,
         fbm((p + e.yxy) * scale) - h0,
         fbm((p + e.yyx) * scale) - h0
       ) / e.x;
+      #endif
       grad -= N * dot(grad, N);
       return normalize(N - grad * strength);
     }
@@ -897,10 +914,14 @@
       vec3 L3 = normalize(vec3(0.10, -0.88, -0.42));
 
       float hC = fbm(vPos * 15.0);
+      #ifdef MOBILE_LITE
+      float hDetail = noise(vPos * 44.0);
+      #else
       float hDetail = fbm(vPos * 44.0);
+      #endif
       float grain = noise(vPos * 92.0);
-      float bumpStrength = (uPartIndex == 4) ? 0.016 : 0.048;
-      vec3 N = perturbNormal(N_geom, vPos, 20.0, bumpStrength);
+      float bumpScale = 20.0;
+      float bumpStrength = 0.048;
 
       float rim = pow(1.0 - max(dot(N_geom, V), 0.0), 2.6);
 
@@ -913,6 +934,7 @@
 
       if (uPartIndex == 0) {
         // PART 0: ASTENOSFER PLASTIS & BAJI MANTEL BERKONVEKSI (Peridotit Silikat 1.300-1.900 C)
+        bumpScale = 20.0; bumpStrength = 0.048;
         vec3 flowCoord = vPos * 4.6 + vec3(-uTime * 0.24, sin(vPos.x * 2.8 + uTime * 0.55) * 0.38, 0.0);
         float w = fbm(flowCoord);
         float magma = fbm(flowCoord * 1.65 + vec3(w * 2.5));
@@ -946,7 +968,7 @@
 
         if (vSurfType < 0.5) {
           // === PERMUKAAN LANTAI SAMUDRA (ABYSSAL SEABED & MID-OCEANIC RIDGE) ===
-          N = perturbNormal(N_geom, vPos, 28.0, 0.055);
+          bumpScale = 28.0; bumpStrength = 0.055;
 
           // Sabuk Anomali Paleomagnetik Simetris (Bukti Seafloor Spreading Vine-Matthews-Morley)
           float magStripes = smoothstep(-0.35, 0.35, sin(conveyor));
@@ -983,7 +1005,7 @@
           ao = mix(0.68, 1.0, clamp(N_geom.y * 0.8 + 0.25, 0.0, 1.0));
         } else {
           // === DINDING IRISAN PENAMPANG LITOSFER SAMUDRA (STRATIGRAFI OFIOLIT 4 LAPIS) ===
-          N = perturbNormal(N_geom, vPos, 32.0, 0.058);
+          bumpScale = 32.0; bumpStrength = 0.058;
           float vLayer = vUV.y; // 0 = dasar litosfer, 1 = lantai samudra
 
           // 1. Mantel Litosferik Samudra (Harzburgit / Peridotit Ultramafik Hijau-Zaitun Gelap: vLayer 0.00 - 0.56)
@@ -1027,7 +1049,7 @@
 
         if (vSurfType < 0.5) {
           // === PERMUKAAN FISIOGRAFI BUSUR SUNDA INDONESIA ===
-          N = perturbNormal(N_geom, vPos, 26.0, 0.056);
+          bumpScale = 26.0; bumpStrength = 0.056;
           vec2 satUV = vec2(fract(0.75 + vUV.x * 0.12), clamp(0.45 + vUV.y * 0.12, 0.01, 0.99));
           vec3 satSample = texture2D(uEarthTex, satUV).rgb;
           float slope = 1.0 - clamp(N_geom.y, 0.0, 1.0);
@@ -1097,7 +1119,7 @@
           specStrength = 0.10;
         } else {
           // === DINDING IRISAN PENAMPANG LEMPENG BENUA EURASIA & PRISMA AKRESI ===
-          N = perturbNormal(N_geom, vPos, 30.0, 0.062);
+          bumpScale = 30.0; bumpStrength = 0.062;
           float vLayer = vUV.y;
 
           if (vPos.x < 0.32) {
@@ -1152,7 +1174,7 @@
         }
       } else if (uPartIndex == 3) {
         // PART 3: DIAPIR MAGMA SUBDUKSI FLUSH, DAPUR MAGMA PEMATANG & ZONA MEGATHRUST
-        N = perturbNormal(N_geom, vPos, 28.0, 0.058);
+        bumpScale = 28.0; bumpStrength = 0.058;
 
         // Tepi Batuan Beku Dingin (Chilled Porphyry/Gabbro Margin) vs Inti Magma Pijar
         float phenocryst = step(0.66, grain);
@@ -1182,8 +1204,13 @@
         specStrength = 0.46;
       } else {
         // PART 4: VOLUME AIR SAMUDRA TRANSPARAN (Batimetri Samudra Hindia, Palung Sunda & Cekungan Mentawai)
+        bumpScale = 20.0; bumpStrength = 0.016;
         float wave1 = fbm(vec3(vPos.x * 14.0 + uTime * 0.38, uTime * 0.25, vPos.z * 14.0 - uTime * 0.22));
+        #ifdef MOBILE_LITE
+        float wave2 = noise(vec3(vPos.x * 28.0 - uTime * 0.45, uTime * 0.30, vPos.z * 28.0 + uTime * 0.35));
+        #else
         float wave2 = fbm(vec3(vPos.x * 28.0 - uTime * 0.45, uTime * 0.30, vPos.z * 28.0 + uTime * 0.35));
+        #endif
         float caustics = smoothstep(0.42, 0.78, wave1 * 0.6 + wave2 * 0.4);
 
         // Kedalaman batimetri menentukan warna air (Palung Sunda di x ~ -0.06 tampak biru-indigo pekat, Pematang & Pesisir tampak pirus-sian)
@@ -1208,6 +1235,9 @@
         emissive = 0.10;
         alpha = vSurfType < 0.5 ? mix(0.62, 0.74, trenchDepth) : 0.48;
       }
+
+      // Single-site normal perturbation (mencegah compiler inlining explosion 7x di ANGLE/HLSL)
+      vec3 N = perturbNormal(N_geom, vPos, bumpScale, bumpStrength);
 
       // Pencahayaan 3-Titik (Matahari + Langit + Pantulan Termal Mantel)
       float diff1 = max(dot(N, L1), 0.0);
@@ -1262,10 +1292,19 @@
       this.isExploded = false;
       this.explodeAmount = 0.0;
       this.showLabels = true;
+      this.hideSpoilers = false;
       this.selectedPart = null;
       this.slideIndex = 0;
       this.simTime = 0;
       this.lastFrameTime = performance.now();
+      this.onReady = null;
+      this._hasFiredReady = false;
+      this.perf = getDevicePerfProfile();
+      this._frameCounter = 0;
+      this._forceHudRedraw = true;
+      this._textWidthCache = new Map();
+      this._needsResize = true;
+      this._pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
 
       this.buildDOM();
       this.initWebGL();
@@ -1276,8 +1315,23 @@
       this.isDestroyed = false;
       this.isPaused = false;
       if (!this._cleanups) this._cleanups = [];
+      if (typeof ResizeObserver !== 'undefined' && this.wrap) {
+        this._ro = new ResizeObserver(() => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        });
+        this._ro.observe(this.wrap);
+      } else {
+        const onWinResize = () => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        };
+        window.addEventListener('resize', onWinResize, { passive: true });
+        this._cleanups.push(() => window.removeEventListener('resize', onWinResize));
+      }
       if (this.glCanvas) {
         const onLost = (e) => {
+          if (this.isDestroyed) return;
           e.preventDefault();
           this.isPaused = true;
           if (this.rafId) {
@@ -1325,7 +1379,7 @@
 
         <!-- Banner Penjelasan Mode Animasi Slide -->
         <div class="earth3d-sim-banner">
-          <b class="sim-title">🧩 Hipotesis Continental Drift (Pangaea 1912)</b>
+          <b class="sim-title">Hipotesis Continental Drift (Pangaea 1912)</b>
           <span class="sim-sub">Putar blok tektonik 3D (drag) atau klik komponen lempeng untuk inspeksi.</span>
         </div>
 
@@ -1345,20 +1399,35 @@
           <div class="lp-comp"></div>
         </div>
 
-        <!-- Baris Pil Komponen & Tombol Kontrol Taktil -->
-        <div class="earth3d-bottom-bar">
-          <div class="earth3d-layer-pills" role="group" aria-label="Pilih Struktur Tektonik">
-            ${['Astenosfer', 'Kerak Samudra', 'Kerak Benua', 'Diapir Magma', 'Palung Laut'].map(
-              (shortTitle, idx) => `<button type="button" class="e3d-pill" data-part="${idx}">
-                      <i style="background:${PART_DATA[idx].accent}"></i>${shortTitle}
-                    </button>`
-            ).join('')}
-          </div>
-          <div class="earth3d-ctrls">
-            <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi">⏸ Jeda</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan / Satukan Blok Lempeng">🧩 Pisahkan</button>
-            <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label">🏷️ Label</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera">↺ Reset</button>
+        <!-- Unified Glass Island Dock di Bawah (Single-Bar Compact) -->
+        <div class="earth3d-bottom-bar" role="toolbar" aria-label="Kontrol Interaktif Lempeng Tektonik">
+          <div class="earth3d-dock">
+            <div class="earth3d-layer-pills" role="group" aria-label="Pilih Struktur Tektonik">
+              ${['Astenosfer', 'K. Samudra', 'K. Benua', 'Diapir Magma', 'Palung Laut'].map(
+                (shortTitle, idx) => `<button type="button" class="e3d-pill" data-part="${idx}" title="Fokuskan ke ${PART_DATA[idx].name}">
+                        <i style="background:${PART_DATA[idx].accent}"></i><span>${shortTitle}</span>
+                      </button>`
+              ).join('')}
+            </div>
+            <div class="earth3d-dock-divider" aria-hidden="true"></div>
+            <div class="earth3d-ctrls" role="group" aria-label="Alat Viewport">
+              <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi (Spasi)" aria-label="Jeda Animasi">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span class="e3d-btn-label">Jeda</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan Blok Lempeng (P)" aria-label="Pisahkan Blok">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg>
+                <span class="e3d-btn-label">Pisahkan</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label (L)" aria-label="Toggle Label">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><circle cx="7" cy="7" r="1.5"></circle></svg>
+                <span class="e3d-btn-label">Label</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera (R)" aria-label="Reset Tampilan">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span class="e3d-btn-label">Reset</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1370,39 +1439,60 @@
       this.simTitleEl = this.wrap.querySelector('.sim-title');
       this.simSubEl = this.wrap.querySelector('.sim-sub');
       this.popupEl = this.wrap.querySelector('.earth3d-layer-popup');
+      if (!this._cleanups) this._cleanups = [];
+      this._dockPicker = createDockPicker({
+        wrap: this.wrap,
+        defaultLabel: 'Bagian',
+        resetLabel: 'Semua Bagian',
+        onClear: () => this.selectPart(null)
+      });
+      this._cleanups.push(() => this._dockPicker?.destroy());
     }
 
     initWebGL() {
-      const gl = this.glCanvas.getContext('webgl', { antialias: true, alpha: true });
+      const gl = this.glCanvas.getContext('webgl', {
+        antialias: this.perf.useAntialias,
+        alpha: this.perf.useAlpha,
+        powerPreference: 'high-performance'
+      });
       this.gl = gl;
+      this.programReady = false;
       if (!gl) return;
 
-      const vs = compileShader(gl, gl.VERTEX_SHADER, VERT_SRC);
-      const fs = compileShader(gl, gl.FRAGMENT_SHADER, FRAG_SRC);
-      const prog = gl.createProgram();
-      gl.attachShader(prog, vs);
-      gl.attachShader(prog, fs);
-      gl.linkProgram(prog);
-      gl.useProgram(prog);
-      this.prog = prog;
-
-      this.attribs = {
-        aPos: gl.getAttribLocation(prog, 'aPos'),
-        aNorm: gl.getAttribLocation(prog, 'aNorm'),
-        aUV: gl.getAttribLocation(prog, 'aUV'),
-        aSurfType: gl.getAttribLocation(prog, 'aSurfType')
-      };
-      this.uniforms = {
-        uMVP: gl.getUniformLocation(prog, 'uMVP'),
-        uOffset: gl.getUniformLocation(prog, 'uOffset'),
-        uPartIndex: gl.getUniformLocation(prog, 'uPartIndex'),
-        uMode: gl.getUniformLocation(prog, 'uMode'),
-        uTime: gl.getUniformLocation(prog, 'uTime'),
-        uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
-        uDim: gl.getUniformLocation(prog, 'uDim'),
-        uEye: gl.getUniformLocation(prog, 'uEye'),
-        uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
-      };
+      const fragSrc = buildMobileFragmentSource(FRAG_SRC, this.perf.shaderMobileLite);
+      this._progHandle = linkProgramAsync(
+        gl,
+        VERT_SRC,
+        fragSrc,
+        (prog, vs, fs) => {
+          if (this.isDestroyed || !this.gl) return;
+          this.vs = vs;
+          this.fs = fs;
+          this.prog = prog;
+          this.attribs = {
+            aPos: gl.getAttribLocation(prog, 'aPos'),
+            aNorm: gl.getAttribLocation(prog, 'aNorm'),
+            aUV: gl.getAttribLocation(prog, 'aUV'),
+            aSurfType: gl.getAttribLocation(prog, 'aSurfType')
+          };
+          this.uniforms = {
+            uMVP: gl.getUniformLocation(prog, 'uMVP'),
+            uOffset: gl.getUniformLocation(prog, 'uOffset'),
+            uPartIndex: gl.getUniformLocation(prog, 'uPartIndex'),
+            uMode: gl.getUniformLocation(prog, 'uMode'),
+            uTime: gl.getUniformLocation(prog, 'uTime'),
+            uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
+            uDim: gl.getUniformLocation(prog, 'uDim'),
+            uEye: gl.getUniformLocation(prog, 'uEye'),
+            uEarthTex: gl.getUniformLocation(prog, 'uEarthTex')
+          };
+          this.programReady = true;
+          this._forceHudRedraw = true;
+        }
+      );
+      this.vs = this._progHandle.vs;
+      this.fs = this._progHandle.fs;
+      this.prog = this._progHandle.prog;
 
       // Inisialisasi tekstur permukaan bumi
       this.earthTex = gl.createTexture();
@@ -1559,28 +1649,40 @@
         this.selectPart(null);
       });
 
+      // Tombol kontrol bawah
       this.wrap.querySelectorAll('.e3d-ctrl-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const act = btn.dataset.action;
           if (act === 'play') {
             this.isPlaying = !this.isPlaying;
             btn.classList.toggle('active', this.isPlaying);
-            btn.innerHTML = this.isPlaying ? '⏸ Jeda' : '▶ Putar';
+            btn.setAttribute('aria-label', this.isPlaying ? 'Jeda Animasi' : 'Putar Animasi');
+            btn.innerHTML = this.isPlaying
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span class="e3d-btn-label">Jeda</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span class="e3d-btn-label">Putar</span>`;
           } else if (act === 'explode') {
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
-            btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            btn.setAttribute('aria-label', this.isExploded ? 'Satukan Blok Lempeng' : 'Pisahkan Blok Lempeng');
+            btn.innerHTML = this.isExploded
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span class="e3d-btn-label">Satukan</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
             if (typeof this.onInspect === 'function') {
               this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
             }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
+            this._forceHudRedraw = true;
             btn.classList.toggle('active', this.showLabels);
           } else if (act === 'reset') {
             this.userInteracting = false;
             this.isExploded = false;
-            this.wrap.querySelector('[data-action="explode"]').classList.remove('active');
-            this.wrap.querySelector('[data-action="explode"]').innerHTML = '🧩 Pisahkan';
+            const expBtn = this.wrap.querySelector('[data-action="explode"]');
+            if (expBtn) {
+              expBtn.classList.remove('active');
+              expBtn.setAttribute('aria-label', 'Pisahkan Blok Lempeng');
+              expBtn.innerHTML = `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
+            }
             this.selectPart(null);
             this.onSlideChange(this.slideIndex);
           }
@@ -1589,6 +1691,7 @@
     }
 
     handleCanvasClick(clientX, clientY) {
+      if (this.hideSpoilers) return;
       const rect = this.hudCanvas.getBoundingClientRect();
       const px = clientX - rect.left;
       const py = clientY - rect.top;
@@ -1611,11 +1714,28 @@
       }
     }
 
+    setQuizState(hideSpoilers) {
+      const next = Boolean(hideSpoilers);
+      if (this.hideSpoilers === next) return;
+      this.hideSpoilers = next;
+      if (this.wrap) {
+        this.wrap.classList.toggle('quiz-hide-spoilers', next);
+      }
+      this._forceHudRedraw = true;
+      if (next) {
+        this.selectPart(null);
+      } else {
+        this.onSlideChange(this.slideIndex);
+      }
+    }
+
     selectPart(partIdx, fromPill = false) {
       this.selectedPart = partIdx;
+      this._forceHudRedraw = true;
       this.wrap.querySelectorAll('.e3d-pill').forEach((btn, i) => {
         btn.classList.toggle('active', i === partIdx);
       });
+      this._dockPicker?.sync();
 
       if (typeof this.onInspect === 'function' && partIdx !== null && partIdx !== undefined) {
         this.onInspect({ type: 'part', id: partIdx, name: PART_DATA[partIdx]?.name });
@@ -1645,6 +1765,7 @@
 
     onSlideChange(slideIdx) {
       this.slideIndex = Math.max(0, Math.min(SLIDE_MODES.length - 1, slideIdx));
+      this._forceHudRedraw = true;
       const mode = SLIDE_MODES[this.slideIndex];
       this.userInteracting = false;
       this.targetYaw = mode.targetYaw;
@@ -1654,7 +1775,7 @@
       if (this.simTitleEl) this.simTitleEl.textContent = mode.badge;
       if (this.simSubEl) this.simSubEl.textContent = mode.hint;
 
-      if (mode.focusPart !== null) {
+      if (mode.focusPart !== null && !this.hideSpoilers) {
         this.selectPart(mode.focusPart);
       } else {
         this.selectPart(null);
@@ -1662,21 +1783,31 @@
     }
 
     resizeIfNeeded() {
+      if (!this._needsResize && this.cssW > 0 && this.cssH > 0) return true;
       const w = this.wrap.clientWidth;
       const h = this.wrap.clientHeight;
       if (w <= 0 || h <= 0) return false;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const pw = Math.round(w * dpr);
-      const ph = Math.round(h * dpr);
+      const rawDpr = window.devicePixelRatio || 1;
+      const glDpr = Math.min(rawDpr, this.perf.maxDpr);
+      const hudDpr = Math.min(rawDpr, this.perf.hudDpr);
+      const pw = Math.round(w * glDpr);
+      const ph = Math.round(h * glDpr);
+      const hpw = Math.round(w * hudDpr);
+      const hph = Math.round(h * hudDpr);
       if (this.glCanvas.width !== pw || this.glCanvas.height !== ph) {
         this.glCanvas.width = pw;
         this.glCanvas.height = ph;
-        this.hudCanvas.width = pw;
-        this.hudCanvas.height = ph;
+      }
+      if (this.hudCanvas.width !== hpw || this.hudCanvas.height !== hph) {
+        this.hudCanvas.width = hpw;
+        this.hudCanvas.height = hph;
       }
       this.cssW = w;
       this.cssH = h;
-      this.dpr = dpr;
+      this.dpr = glDpr;
+      this.hudDpr = hudDpr;
+      this._needsResize = false;
+      this._forceHudRedraw = true;
       return true;
     }
 
@@ -1692,26 +1823,28 @@
         this.rafId = null;
         return;
       }
-      if (document.hidden || (this.cardEl && this.cardEl.offsetParent === null)) {
+      if (document.hidden) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
-      const pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
+      const pageEl = this._pageEl;
       if (pageEl && !pageEl.classList.contains('active')) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
       if (!this.resizeIfNeeded()) {
-        this.isPaused = true;
-        this.rafId = null;
+        if (!this.isDestroyed && !this.isPaused) {
+          this.rafId = requestAnimationFrame(this.animate);
+        }
         return;
       }
       this.rafId = requestAnimationFrame(this.animate);
       if (typeof now !== 'number') now = performance.now();
       const dt = Math.min(0.05, Math.max(0, (now - this.lastFrameTime) * 0.001));
       this.lastFrameTime = now;
+      this._frameCounter++;
 
       
 
@@ -1748,16 +1881,37 @@
       this.lastMVP = mvp;
       this.currentEye = eye;
 
-      this.renderWebGL(mvp, eye);
-      this.renderHUD(mvp, eye);
+      try {
+        if (!this.programReady) return;
+        this.renderWebGL(mvp, eye);
+        const shouldDrawHud =
+          this._forceHudRedraw ||
+          this.isDragging ||
+          this.perf.hudFrameSkip <= 1 ||
+          this._frameCounter % this.perf.hudFrameSkip === 0;
+        if (shouldDrawHud) {
+          this._forceHudRedraw = false;
+          this.renderHUD(mvp, eye);
+        }
+        if (!this._hasFiredReady && typeof this.onReady === 'function') {
+          this._hasFiredReady = true;
+          this.onReady();
+        }
+      } catch (err) {
+        console.warn('TectonicViewer render frame skipped:', err);
+      }
     }
 
     renderWebGL(mvp, eye) {
       const gl = this.gl;
-      if (!gl) return;
+      if (!gl || !this.programReady || !this.prog) return;
 
       gl.viewport(0, 0, this.glCanvas.width, this.glCanvas.height);
-      gl.clearColor(0, 0, 0, 0);
+      if (this.perf.useAlpha) {
+        gl.clearColor(0, 0, 0, 0);
+      } else {
+        gl.clearColor(0.09, 0.09, 0.13, 1.0);
+      }
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.useProgram(this.prog);
@@ -1776,6 +1930,14 @@
         const off = this.getPartOffset(i);
         const isSel = this.selectedPart === i;
         const isDimmed = this.selectedPart !== null && !isSel;
+
+        // CULL_FACE aktif pada 3 blok solid CCW utama (0..2 = 95% piksel layar)
+        if (i <= 2) {
+          gl.enable(gl.CULL_FACE);
+          gl.cullFace(gl.BACK);
+        } else {
+          gl.disable(gl.CULL_FACE);
+        }
 
         if (i === 4) {
           gl.enable(gl.BLEND);
@@ -1844,8 +2006,9 @@
       const ctx = this.ctx2d;
       const w = this.cssW;
       const h = this.cssH;
+      const hudDpr = this.hudDpr || this.dpr || 1;
       ctx.save();
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.setTransform(hudDpr, 0, 0, hudDpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
       this.pendingBoxes = [];
@@ -1895,7 +2058,7 @@
           ctx,
           (pLeft.x + pRight.x) * 0.5,
           Math.min(pLeft.y, pRight.y) - 34,
-          '🌿 Sabuk Fosil Glossopteris & Mesosaurus (Pangaea)',
+          'Sabuk Fosil Glossopteris & Mesosaurus (Pangaea)',
           'rgba(14, 42, 58, 0.92)',
           '#74c69d',
           null,
@@ -1905,8 +2068,8 @@
         );
       }
 
-      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.24 - drift, 0.20, 0.08], [-0.74 - drift, 0.20, 0.08], '#38bdf8', '◄ Amerika Selatan');
-      this.drawVectorArrow3D(ctx, mvp, w, h, [0.24 + drift, 0.26, 0.08], [0.74 + drift, 0.26, 0.08], '#f7c948', 'Afrika ►');
+      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.24 - drift, 0.20, 0.08], [-0.74 - drift, 0.20, 0.08], '#38bdf8', '◄ Blok Benua Barat');
+      this.drawVectorArrow3D(ctx, mvp, w, h, [0.24 + drift, 0.26, 0.08], [0.74 + drift, 0.26, 0.08], '#f7c948', 'Blok Benua Timur ►');
     }
 
     // Slide 2: 3 Mekanisme Penggerak Lempeng (Konveksi Termal, Ridge Push, Slab Pull)
@@ -1931,12 +2094,12 @@
       }
     }
 
-    // Slide 3: Batas Konvergen (Subduksi, Palung Sunda, Busur Luar Mentawai, Megathrust & Busur Gunung Api)
+    // Slide 3: Batas Konvergen (Subduksi, Palung Samudra, Prisma Akresi, Megathrust & Busur Gunung Api)
     drawConvergentSubductionHUD(ctx, mvp, w, h) {
-      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.66, 0.03, 0.52], [-0.18, 0.01, 0.52], '#38bdf8', 'Lempeng Indo-Australia ➔');
-      this.drawVectorArrow3D(ctx, mvp, w, h, [0.98, 0.20, 0.45], [0.52, 0.20, 0.45], '#52b788', '◄ Lempeng Eurasia');
+      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.66, 0.03, 0.52], [-0.18, 0.01, 0.52], '#38bdf8', 'Lempeng Samudra (SiMa) ➔');
+      this.drawVectorArrow3D(ctx, mvp, w, h, [0.98, 0.20, 0.45], [0.52, 0.20, 0.45], '#52b788', '◄ Lempeng Benua (SiAl)');
 
-      // Gelombang hiposenter gempa di Zona Sunda Megathrust
+      // Gelombang hiposenter gempa di Zona Megathrust
       const megaAlpha = this.getVisibilityAlpha([0.16, -0.17, 0.84], [0.0, 0.22, 0.97]);
       const megaPt = projectPoint3D([0.16, -0.17, 0.84], mvp, w, h);
       if (megaPt && megaAlpha >= 0.05) {
@@ -1955,19 +2118,19 @@
         ctx.fill();
         ctx.restore();
 
-        this.drawPillTag(ctx, megaPt.x, megaPt.y + 24, '⚡ Zona Sunda Megathrust (Gempa & Tsunami)', 'rgba(14,42,58,0.92)', '#ff7b47', megaPt, '#ff5a36', 4.2, megaAlpha);
+        this.drawPillTag(ctx, megaPt.x, megaPt.y + 24, 'Zona Megathrust (Gempa & Tsunami)', 'rgba(14,42,58,0.92)', '#ff7b47', megaPt, '#ff5a36', 4.2, megaAlpha);
       }
 
-      // Label Palung Sunda & Prisma Akresi Mentawai
+      // Label Palung Samudra & Prisma Akresi
       const topAlpha = this.getVisibilityAlpha([0.0, 0.0, -0.1], [0.0, 0.76, 0.65]);
       if (topAlpha >= 0.05) {
         const trenchPt = projectPoint3D([-0.06, -0.09, -0.32], mvp, w, h);
         if (trenchPt) {
-          this.drawPillTag(ctx, trenchPt.x, trenchPt.y - 18, '🌊 Palung Sunda (~7.200 m)', 'rgba(9,27,38,0.92)', '#38bdf8', trenchPt, '#38bdf8', 4.2, topAlpha);
+          this.drawPillTag(ctx, trenchPt.x, trenchPt.y - 18, 'Palung Samudra (Trench)', 'rgba(9,27,38,0.92)', '#38bdf8', trenchPt, '#38bdf8', 4.2, topAlpha);
         }
         const prismPt = projectPoint3D([0.13, 0.04, 0.12], mvp, w, h);
         if (prismPt) {
-          this.drawPillTag(ctx, prismPt.x, prismPt.y - 18, '🏝️ Prisma Akresi (Kep. Mentawai–Nias)', 'rgba(9,27,38,0.92)', '#a3e635', prismPt, '#a3e635', 4.2, topAlpha);
+          this.drawPillTag(ctx, prismPt.x, prismPt.y - 18, 'Prisma Akresi & Busur Muka', 'rgba(9,27,38,0.92)', '#a3e635', prismPt, '#a3e635', 4.2, topAlpha);
         }
       }
     }
@@ -1978,12 +2141,12 @@
       this.drawVectorArrow3D(ctx, mvp, w, h, [-0.72, 0.06, 0.25], [-0.28, 0.06, 0.25], '#38bdf8', 'Lempeng Menjauh ►');
 
       // Panah naiknya magma astenosfer di celah rekahan
-      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.82, -0.52, 0.84], [-0.82, -0.04, 0.84], '#f7c948', '🔥 Upwelling Magma');
+      this.drawVectorArrow3D(ctx, mvp, w, h, [-0.82, -0.52, 0.84], [-0.82, -0.04, 0.84], '#f7c948', 'Upwelling Magma');
 
       const ridgeAlpha = this.getVisibilityAlpha([-0.82, 0.06, -0.28], [-0.2, 0.76, 0.62]);
       const ridgePt = projectPoint3D([-0.82, 0.06, -0.28], mvp, w, h);
       if (ridgePt && ridgeAlpha >= 0.05) {
-        this.drawPillTag(ctx, ridgePt.x, ridgePt.y - 18, '⛰️ Mid-Oceanic Ridge & Lembah Rift', 'rgba(14,42,58,0.92)', '#f7c948', ridgePt, '#f7c948', 4.2, ridgeAlpha);
+        this.drawPillTag(ctx, ridgePt.x, ridgePt.y - 18, 'Mid-Oceanic Ridge & Lembah Rift', 'rgba(14,42,58,0.92)', '#f7c948', ridgePt, '#f7c948', 4.2, ridgeAlpha);
       }
     }
 
@@ -2010,7 +2173,7 @@
           ctx,
           faultEpic.x,
           faultEpic.y - 24,
-          '⚠️ Sesar Semangko · Palu-Koro · Lembang (Strike-Slip)',
+          'Zona Sesar Mendatar (Strike-Slip)',
           'rgba(14,42,58,0.92)',
           '#f7c948',
           faultEpic,
@@ -2096,7 +2259,7 @@
     }
 
     drawPartLabels3D(ctx, mvp, w, h) {
-      if (!this.showLabels) return;
+      if (!this.showLabels || this.hideSpoilers) return;
 
       const mode = SLIDE_MODES[this.slideIndex].id;
       // Pada slide tematik (Wegener, Penggerak, Transform), sembunyikan label geologi internal
@@ -2167,12 +2330,16 @@
     }
 
     drawPillTag(ctx, x, y, text, bg, fg, anchorPt = null, dotCol = null, dotR = 4.2, alpha = 1.0) {
-      if (alpha < 0.05) return;
+      if (alpha < 0.05 || this.hideSpoilers) return;
       if (!this.pendingBoxes) this.pendingBoxes = [];
       ctx.font = '400 11.5px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
       const padX = 9;
       const dotSpace = 12;
-      const tw = ctx.measureText(text).width;
+      let tw = this._textWidthCache.get(text);
+      if (tw === undefined) {
+        tw = ctx.measureText(text).width;
+        this._textWidthCache.set(text, tw);
+      }
       const bw = tw + padX * 2 + dotSpace;
       const bh = 22;
       const bx = Math.max(6, Math.min(this.cssW - bw - 6, x - bw / 2));
@@ -2274,6 +2441,8 @@
   
     resize() {
       if (!this.isDestroyed && typeof this.resizeIfNeeded === 'function') {
+        this._needsResize = true;
+        this._forceHudRedraw = true;
         return this.resizeIfNeeded();
       }
     }
@@ -2298,6 +2467,15 @@
     destroy() {
       this.isDestroyed = true;
       this.isPaused = true;
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+      if (this._progHandle) {
+        this._progHandle.cancel();
+        this._progHandle = null;
+      }
+      this.programReady = false;
       if (this._cleanups && Array.isArray(this._cleanups)) {
         this._cleanups.forEach(fn => { try { fn(); } catch (e) {} });
         this._cleanups = null;
@@ -2306,51 +2484,70 @@
         try { this._io.disconnect(); } catch (e) {}
         this._io = null;
       }
+      if (this._ro) {
+        try { this._ro.disconnect(); } catch (e) {}
+        this._ro = null;
+      }
       if (typeof pendingViewers !== 'undefined' && Array.isArray(pendingViewers)) {
         const idx = pendingViewers.indexOf(this);
         if (idx !== -1) pendingViewers.splice(idx, 1);
       }
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
       if (this.gl) {
         try {
+          if (this.vs) {
+            try { this.gl.deleteShader(this.vs); } catch (e) {}
+            this.vs = null;
+          }
+          if (this.fs) {
+            try { this.gl.deleteShader(this.fs); } catch (e) {}
+            this.fs = null;
+          }
           if (this.prog) {
-            this.gl.deleteProgram(this.prog);
+            try { this.gl.deleteProgram(this.prog); } catch (e) {}
             this.prog = null;
           }
           if (this.earthTex) {
-            this.gl.deleteTexture(this.earthTex);
+            try { this.gl.deleteTexture(this.earthTex); } catch (e) {}
             this.earthTex = null;
           }
           if (this.materialTex) {
-            this.gl.deleteTexture(this.materialTex);
+            try { this.gl.deleteTexture(this.materialTex); } catch (e) {}
             this.materialTex = null;
           }
           if (this.meshes) {
             this.meshes.forEach(m => {
-              if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
-              if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
-              if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
-              if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
-              if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              try {
+                if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
+                if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
+                if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
+                if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
+                if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              } catch (e) {}
             });
             this.meshes = null;
           }
-        } catch (e) {}
+          releaseWebGLContextAsync(this.gl);
+        } catch (e) {
+          console.warn('WebGL destroy warning:', e);
+        }
+        this.gl = null;
       }
       if (this.glCanvas) {
         this.glCanvas.width = 1;
         this.glCanvas.height = 1;
+        this.glCanvas = null;
       }
       if (this.hudCanvas) {
         this.hudCanvas.width = 1;
         this.hudCanvas.height = 1;
+        this.hudCanvas = null;
       }
+      this.ctx2d = null;
       if (this.wrap && this.wrap.parentNode) {
         this.wrap.parentNode.removeChild(this.wrap);
+        this.wrap = null;
       }
+      this.cardEl = null;
     }
 
 }

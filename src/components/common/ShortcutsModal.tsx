@@ -100,7 +100,6 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     >
       <div className="refs-head">
         <div className="shortcuts-modal-title">
-          <span className="shortcuts-title-icon">⌨️</span>
           <div>
             <h3 id="shortcuts-title">Pintasan Papan Ketik (Keyboard Hotkeys)</h3>
             <p className="shortcuts-title-sub">
@@ -143,7 +142,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
 
       <div className="shortcuts-dialog-foot">
         <span className="shortcuts-foot-hint">
-          💡 Tips: Tekan <kbd className="kbd-key kbd-mini">M</kbd> kapan saja untuk membisukan audio seketika di ruang kelas.
+          Tips: Tekan <kbd className="kbd-key kbd-mini">M</kbd> kapan saja untuk membisukan audio seketika di ruang kelas.
         </span>
         <button type="button" className="btn btn-outline" onClick={onClose}>
           Tutup Panduan

@@ -86,14 +86,16 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
       ref={dialogRef}
       className="magma-sandbox-dialog"
       onClick={handleBackdropClick}
+      onClose={onClose}
       aria-label="Laboratorium Fisika Magma Semeru"
     >
       <div className="sandbox-dialog-header">
         <div className="sandbox-title-wrap">
-          <span className="sandbox-icon">🧪</span>
           <div>
             <h3>Laboratorium Fisika Magma Semeru</h3>
-            <p>Eksperimen Interaktif Viskositas Silika ($SiO_2$), Tekanan Gas &amp; Dinamika Erupsi</p>
+            <p>
+              Eksperimen Interaktif Viskositas Silika (SiO<sub>2</sub>), Tekanan Gas &amp; Dinamika Erupsi
+            </p>
           </div>
         </div>
         <button
@@ -112,7 +114,7 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
       <div className="sandbox-dialog-body">
         {/* Preset Cepat Analogi Gunung Api */}
         <div className="sandbox-presets-bar">
-          <span className="presets-label">⚡ Preset Gunung Api:</span>
+          <span className="presets-label">Preset Gunung Api:</span>
           <div className="presets-chips">
             {Object.entries(MAGMA_PRESETS).map(([key, item]) => {
               const isSelected =
@@ -139,10 +141,12 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
           <div className="sandbox-control-card">
             <div className="ctrl-card-header">
               <label htmlFor="silica-slider">
-                <b>1. Viskositas Magma &amp; Silika ($SiO_2$):</b>
+                <b>
+                  1. Viskositas Magma &amp; Silika (SiO<sub>2</sub>):
+                </b>
               </label>
               <span className="ctrl-val-badge">
-                {params.silicaPercent}% $SiO_2$
+                {params.silicaPercent}% SiO<sub>2</sub>
               </span>
             </div>
             <input
@@ -170,7 +174,9 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
           <div className="sandbox-control-card">
             <div className="ctrl-card-header">
               <label htmlFor="gas-slider">
-                <b>2. Kandungan Gas Volatil ($H_2O, CO_2, SO_2$):</b>
+                <b>
+                  2. Kandungan Gas Volatil (H<sub>2</sub>O, CO<sub>2</sub>, SO<sub>2</sub>):
+                </b>
               </label>
               <span className="ctrl-val-badge gas">
                 {params.gasContentPercent}% wt
@@ -228,7 +234,7 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
           <div className="telemetry-analysis-box">
             <p className="analysis-text">{telemetry.explanation}</p>
             <div className="hazard-warning">
-              <span>⚠️ Bahaya Utama:</span> {telemetry.primaryHazard}
+              <span>Bahaya Utama:</span> {telemetry.primaryHazard}
             </div>
           </div>
         </div>
@@ -243,14 +249,14 @@ export const MagmaSandboxModal: React.FC<MagmaSandboxModalProps> = ({
               onClose();
             }}
           >
-            👁️ Amati Model 3D Bebas
+            Amati Model 3D Bebas
           </button>
           <button
             type="button"
             className="btn btn-magma btn-trigger-erupt"
             onClick={handleTrigger}
           >
-            💥 Picu Erupsi Magma (Simulasi 3D)
+            Picu Erupsi Magma (Simulasi 3D)
           </button>
         </div>
       </div>

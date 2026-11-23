@@ -26,7 +26,7 @@ export const INQUIRY_CHALLENGES: Record<string, InquiryChallenge> = {
     moduleId: 'struktur',
     targetSlide: 4, // Slide 5: Efek Dinamo (Geodynamo) Inti Luar Cair & Medan Magnet 3D
     title: 'Deteksi Generator Medan Magnet Bumi (Geodynamo)',
-    badge: '🎯 MISI INKUIRI #01',
+    badge: 'Misi Inkuiri 01',
     instruction: 'Klik pada lapisan interior bumi yang berfasa cair dan mengalami konveksi logam berat (Fe-Ni) untuk menemukan sumber medan magnet pelindung bumi!',
     hint: 'Lapisan ini berada di kedalaman 2.900 hingga 5.150 km, tepat di atas inti dalam padat.',
     targetType: 'layer',
@@ -44,7 +44,7 @@ export const INQUIRY_CHALLENGES: Record<string, InquiryChallenge> = {
     moduleId: 'lempeng',
     targetSlide: 2, // Slide 3: Batas Konvergen & Tripel Lempeng Indonesia
     title: 'Investigasi Geometri Penunjaman Megathrust',
-    badge: '🎯 MISI INKUIRI #02',
+    badge: 'Misi Inkuiri 02',
     instruction: 'Klik pada lempeng kerak samudra (SiMa) yang menunjam ke bawah kerak benua (SiAl) pada zona Palung Sunda!',
     hint: 'Pilih blok slab samudra (warna biru/laut) di sisi kiri penampang geologi atau pilih pil Lempeng Samudra.',
     targetType: 'part',
@@ -62,9 +62,9 @@ export const INQUIRY_CHALLENGES: Record<string, InquiryChallenge> = {
     moduleId: 'vulkanisme',
     targetSlide: 0, // Slide 1: Anatomi Gunung Semeru & Dapur Magma
     title: 'Pelacakan Ruang Magma Utama Semeru (Batolit)',
-    badge: '🎯 MISI INKUIRI #03',
+    badge: 'Misi Inkuiri 03',
     instruction: 'Identifikasi reservoir magma raksasa di kedalaman 4–12 km di bawah kawah aktif Jonggring Saloko!',
-    hint: 'Gunakan tombol [🧩 Pisahkan] atau klik langsung kantong magma pijar di dasar penampang Semeru.',
+    hint: 'Gunakan tombol [Pisahkan] atau klik langsung kantong magma pijar di dasar penampang Semeru.',
     targetType: 'part',
     targetId: 2, // Batolit & Dapur Magma Utama Semeru
     xpReward: 75,
@@ -80,7 +80,7 @@ export const INQUIRY_CHALLENGES: Record<string, InquiryChallenge> = {
     moduleId: 'endogen',
     targetSlide: 3, // Slide 4: Lembah Patahan Graben / Slank
     title: 'Analisis Amblasan Blok Patahan (Graben)',
-    badge: '🎯 MISI INKUIRI #04',
+    badge: 'Misi Inkuiri 04',
     instruction: 'Temukan blok batuan tengah (Hanging Wall) yang amblas ke bawah akibat gaya tarikan (tensional) tektonik!',
     hint: 'Pilih lembah sesar amblas di tengah blok yang membentuk bentang alam seperti Ngarai Sianok.',
     targetType: 'part',

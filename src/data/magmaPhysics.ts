@@ -1,8 +1,5 @@
-// ==========================================================================
-// MESIN FISIKA MAGMA & VOLKANOLOGI - DINAMIKA LITOSFER
+// Mesin Fisika Magma: Hubungan Silika (SiO2), Viskositas, Tekanan Gas, dan Gaya Erupsi
 // Kurikulum Merdeka Geografi SMA/MA (Fase E/F)
-// Hubungan Silika (SiO2), Viskositas, Tekanan Gas, dan Gaya Erupsi
-// ==========================================================================
 
 export type EruptionRegime = 'hawaii' | 'stromboli' | 'vulcanian_semeru' | 'plinian';
 
@@ -33,28 +30,28 @@ export const MAGMA_PRESETS: Record<
 > = {
   semeru: {
     label: 'Gunung Semeru (Jonggring Saloko)',
-    icon: '🌋',
+    icon: '△',
     silica: 58,
     gas: 3.8,
     desc: 'Tipe Vulkano & Awan Panas Guguran (Besuk Kobokan)'
   },
   kilauea: {
     label: 'Kilauea / Mauna Loa (Hawaii)',
-    icon: '🏝️',
+    icon: '◐',
     silica: 48,
     gas: 1.2,
     desc: 'Erupsi Efusif Tenang, Lelehan Lava Basaltik Encer'
   },
   stromboli: {
     label: 'Gunung Stromboli (Italia)',
-    icon: '🎆',
+    icon: '◈',
     silica: 51,
     gas: 4.6,
     desc: 'Air Mancur Lava Pijar Ritmik & Bom Balistik'
   },
   krakatau: {
     label: 'Krakatau 1883 / Tambora 1815',
-    icon: '💥',
+    icon: '◇',
     silica: 71,
     gas: 5.8,
     desc: 'Letusan Katastrofik Ultra-Plinian Kolom Stratosfer'

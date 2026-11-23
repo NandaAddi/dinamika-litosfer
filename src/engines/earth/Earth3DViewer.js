@@ -15,6 +15,10 @@
      * Slide 5: Efek Dinamo (Geodynamo) Inti Luar Cair & Medan Magnet 3D
    ========================================================================== */
 /* ES Module Export */
+import { getDevicePerfProfile, buildMobileFragmentSource } from '../../utils/devicePerf';
+import { linkProgramAsync, releaseWebGLContextAsync } from '../../utils/webglAsync';
+import { createDockPicker } from '../../utils/dockPicker';
+
   const LAYER_DATA = [
     {
       id: 'inti-dalam',
@@ -96,7 +100,7 @@
   const SLIDE_MODES = [
     {
       id: 'seismik',
-      badge: '🔬 Simulasi Gelombang Seismik P & S',
+      badge: 'Simulasi Gelombang Seismik P & S',
       hint: 'Gelombang P (biru) menembus inti cair; Gelombang S (kuning) terhenti di 2.900 km (Zona Bayangan).',
       targetYaw: 0.78,
       targetPitch: 0.22,
@@ -105,7 +109,7 @@
     },
     {
       id: 'diskontinuitas',
-      badge: '📡 Bidang Diskontinuitas Moho & Gutenberg',
+      badge: 'Bidang Diskontinuitas Moho & Gutenberg',
       hint: 'Pembiasan tajam gelombang gempa di batas Moho (~35 km), Gutenberg (2.900 km), & Lehmann (5.150 km).',
       targetYaw: 0.84,
       targetPitch: 0.26,
@@ -114,7 +118,7 @@
     },
     {
       id: 'kerak',
-      badge: '🏔️ Kerak Benua (SiAl) vs Kerak Samudra (SiMa)',
+      badge: 'Kerak Benua (SiAl) vs Kerak Samudra (SiMa)',
       hint: 'Kerak benua tebal (30–70 km, ringan) vs kerak samudra tipis (5–10 km, padat & menunjam).',
       targetYaw: 0.70,
       targetPitch: 0.30,
@@ -123,7 +127,7 @@
     },
     {
       id: 'konveksi',
-      badge: '🔥 Arus Konveksi Termal Astenosfer & Mantel',
+      badge: 'Arus Konveksi Termal Astenosfer & Mantel',
       hint: 'Sirkulasi panas mantel mengapungkan dan menggeser lempeng litosfer di atasnya.',
       targetYaw: 0.80,
       targetPitch: 0.22,
@@ -132,7 +136,7 @@
     },
     {
       id: 'geodynamo',
-      badge: '🧲 Efek Dinamo Inti Luar & Medan Magnet Bumi',
+      badge: 'Efek Dinamo Inti Luar & Medan Magnet Bumi',
       hint: 'Konveksi logam Fe-Ni cair di Inti Luar membangkitkan perisai magnetosfer bumi.',
       targetYaw: 0.76,
       targetPitch: 0.18,
@@ -147,8 +151,9 @@
   const pendingViewers = [];
 
   function buildSharedEarthCanvases(img) {
-    const W = 2048;
-    const H = 1024;
+    const perf = getDevicePerfProfile();
+    const W = perf.earthTexWidth;
+    const H = perf.earthTexHeight;
     const albCanvas = document.createElement('canvas');
     albCanvas.width = W;
     albCanvas.height = H;
@@ -159,7 +164,7 @@
     const d = imgData.data;
 
     // 1. Blend sambungan bujur (seam) di Samudra Pasifik agar 100% mulus tanpa garis sambungan
-    const blendW = 36;
+    const blendW = Math.max(8, Math.round(W * (36 / 2048)));
     for (let y = 0; y < H; y++) {
       for (let x = 0; x < blendW; x++) {
         const t = x / blendW;
@@ -174,7 +179,7 @@
     }
 
     // 2. Haluskan baris piksel di kutub utara & selatan agar tidak mengerucut di titik kutub
-    const poleRows = 16;
+    const poleRows = Math.max(6, Math.round(H * (16 / 1024)));
     for (let y = 0; y < poleRows; y++) {
       let rAvg = 0, gAvg = 0, bAvg = 0;
       for (let x = 0; x < W; x++) {
@@ -207,9 +212,11 @@
     }
     albCtx.putImageData(imgData, 0, 0);
 
-    // 3. Bangun Peta Normal Topografi 3D + Masker Air Spekular + Elevasi (1024x512)
-    const MW = 1024;
-    const MH = 512;
+    // 3. Bangun Peta Normal Topografi 3D + Masker Air Spekular + Elevasi (adaptif desktop/mobile)
+    const MW = perf.isMobile ? 256 : 512;
+    const MH = perf.isMobile ? 128 : 256;
+    const stepX = Math.floor(W / MW);
+    const stepY = Math.floor(H / MH);
     const matCanvas = document.createElement('canvas');
     matCanvas.width = MW;
     matCanvas.height = MH;
@@ -221,10 +228,10 @@
     const waterMask = new Float32Array(MW * MH);
 
     for (let y = 0; y < MH; y++) {
-      const sy = y * 2;
+      const sy = Math.min(H - 1, y * stepY);
       const latNorm = Math.abs(y / MH - 0.5) * 2.0; // 0 di ekuator, 1 di kutub
       for (let x = 0; x < MW; x++) {
-        const sx = x * 2;
+        const sx = Math.min(W - 1, x * stepX);
         const idx = (sy * W + sx) * 4;
         const r = d[idx] / 255;
         const g = d[idx + 1] / 255;
@@ -304,9 +311,24 @@
     pendingViewers.push(viewer);
     if (pendingViewers.length > 1) return;
 
-    const img = new Image();
-    img.onload = () => buildSharedEarthCanvases(img);
-    img.src = window.EARTH_DAYMAP_DATA_URI || '/assets/images/earth_daymap.jpg';
+    // Tunda pemrosesan tekstur satelit NASA saat browser idle agar tidak memblokir main thread
+    const loadTask = () => {
+      const img = new Image();
+      img.onload = () => {
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(() => buildSharedEarthCanvases(img));
+        } else {
+          setTimeout(() => buildSharedEarthCanvases(img), 40);
+        }
+      };
+      img.src = window.EARTH_DAYMAP_DATA_URI || '/assets/images/earth_daymap.webp';
+    };
+
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(loadTask);
+    } else {
+      setTimeout(loadTask, 350);
+    }
   }
 
   // Matriks & Proyeksi 3D (Mendukung buffer 'out' untuk Zero-Allocation)
@@ -392,9 +414,7 @@
 
   // Geometri Cangkang Bola 3D Halus (Tanpa Distorsi Kutub) dengan Potongan Kuadran (Cutaway)
   const _shellGeomCache = new Map();
-  function _uncachedCreateShellGeometry(rInner, rOuter, cutaway) {
-    const latSegs = 56;
-    const lonSegs = 80;
+  function _uncachedCreateShellGeometry(rInner, rOuter, cutaway, latSegs = 56, lonSegs = 80) {
     const positions = [];
     const normals = [];
     const uvs = [];
@@ -497,13 +517,12 @@
       indices: new Uint16Array(indices)
     };
   }
-  function createShellGeometry(rInner, rOuter, cutaway) {
-    const key = rInner + '_' + rOuter + '_' + cutaway;
+  function createShellGeometry(rInner, rOuter, cutaway, latSegs = 56, lonSegs = 80) {
+    const key = rInner + '_' + rOuter + '_' + cutaway + '_' + latSegs + '_' + lonSegs;
     if (_shellGeomCache.has(key)) return _shellGeomCache.get(key);
-    const g = _uncachedCreateShellGeometry(rInner, rOuter, cutaway);
+    const g = _uncachedCreateShellGeometry(rInner, rOuter, cutaway, latSegs, lonSegs);
     _shellGeomCache.set(key, g);
     return g;
-
   }
 
   const VERT_SRC = `
@@ -570,7 +589,11 @@
     float fbm(vec3 p) {
       float v = 0.0;
       float a = 0.5;
+      #ifdef MOBILE_LITE
+      for (int i = 0; i < 2; i++) {
+      #else
       for (int i = 0; i < 4; i++) {
+      #endif
         v += a * noise(p);
         p = p * 2.03 + vec3(1.7, 9.2, 5.4);
         a *= 0.5;
@@ -661,7 +684,11 @@
           vec3 oceanTint = mix(texCol * vec3(0.88, 0.98, 1.12), vec3(0.03, 0.16, 0.36), 0.18);
           vec3 landTint = pow(texCol, vec3(0.94)) * 1.06;
           // Tambah detail mikro topografi pada pegunungan daratan
+          #ifdef MOBILE_LITE
+          float micro = noise(vPos * 28.0);
+          #else
           float micro = fbm(vPos * 28.0);
+          #endif
           landTint *= (0.90 + micro * 0.22 + elev * 0.12);
 
           baseCol = mix(landTint, oceanTint, smoothstep(0.35, 0.65, waterMask));
@@ -672,15 +699,20 @@
             vPos.y,
             vPos.x * sin(uTime * 0.025) + vPos.z * cos(uTime * 0.025)
           );
+          float latBand = 0.78 + 0.22 * cos(vPos.y * 5.5);
+          #ifdef MOBILE_LITE
+          float cRaw = fbm(cloudPos * 4.8 + vec3(0.0, uTime * 0.015, 0.0));
+          float clouds = smoothstep(0.46, 0.72, cRaw * latBand);
+          #else
           float cWarp = fbm(cloudPos * 3.2 + vec3(0.0, uTime * 0.015, 0.0));
           float cRaw = fbm(cloudPos * 5.4 + vec3(cWarp * 1.8));
           // Sabuk awan ekuator (ITCZ) dan lintang sedang
-          float latBand = 0.78 + 0.22 * cos(vPos.y * 5.5);
           float clouds = smoothstep(0.50, 0.76, cRaw * latBand);
 
           // Bayangan tipis awan di permukaan bumi
           float cShadow = smoothstep(0.52, 0.75, fbm((cloudPos - L1 * 0.025) * 5.4 + vec3(cWarp * 1.8)) * latBand);
           baseCol *= (1.0 - cShadow * 0.22);
+          #endif
 
           // Campurkan awan putih bersih di atas samudra dan benua
           baseCol = mix(baseCol, vec3(0.96, 0.98, 1.0), clouds * 0.68);
@@ -771,10 +803,19 @@
       this.isExploded = false;
       this.explodeAmount = 0.0;
       this.showLabels = true;
+      this.hideSpoilers = false;
       this.selectedLayer = null;
       this.slideIndex = 0;
       this.simTime = 0;
       this.lastFrameTime = performance.now();
+      this.onReady = null;
+      this._hasFiredReady = false;
+      this.perf = getDevicePerfProfile();
+      this._frameCounter = 0;
+      this._forceHudRedraw = true;
+      this._textWidthCache = new Map();
+      this._needsResize = true;
+      this._pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
 
       this.buildDOM();
       this.initWebGL();
@@ -785,8 +826,23 @@
       this.isDestroyed = false;
       this.isPaused = false;
       if (!this._cleanups) this._cleanups = [];
+      if (typeof ResizeObserver !== 'undefined' && this.wrap) {
+        this._ro = new ResizeObserver(() => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        });
+        this._ro.observe(this.wrap);
+      } else {
+        const onWinResize = () => {
+          this._needsResize = true;
+          this._forceHudRedraw = true;
+        };
+        window.addEventListener('resize', onWinResize, { passive: true });
+        this._cleanups.push(() => window.removeEventListener('resize', onWinResize));
+      }
       if (this.glCanvas) {
         const onLost = (e) => {
+          if (this.isDestroyed) return;
           e.preventDefault();
           this.isPaused = true;
           if (this.rafId) {
@@ -834,7 +890,7 @@
 
         <!-- Banner Penjelasan Mode Animasi Slide -->
         <div class="earth3d-sim-banner">
-          <b class="sim-title">🔬 Simulasi Gelombang Seismik P &amp; S</b>
+          <b class="sim-title">Simulasi Gelombang Seismik P &amp; S</b>
           <span class="sim-sub">Putar bola bumi (drag) atau klik lapisan untuk inspeksi detail.</span>
         </div>
 
@@ -854,20 +910,39 @@
           <div class="lp-comp"></div>
         </div>
 
-        <!-- Baris Pil Lapisan & Tombol Kontrol Taktil di Bawah -->
-        <div class="earth3d-bottom-bar">
-          <div class="earth3d-layer-pills" role="group" aria-label="Pilih Lapisan Bumi">
-            ${LAYER_DATA.map(
-              l => `<button type="button" class="e3d-pill" data-layer="${l.index}">
-                      <i style="background:${l.accent}"></i>${l.name.split(' (')[0]}
-                    </button>`
-            ).join('')}
-          </div>
-          <div class="earth3d-ctrls">
-            <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi">⏸ Jeda</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan / Satukan Lapisan 3D">🧩 Pisahkan</button>
-            <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label">🏷️ Label</button>
-            <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera">↺ Reset</button>
+        <!-- Unified Glass Island Dock di Bawah (Single-Bar Compact) -->
+        <div class="earth3d-bottom-bar" role="toolbar" aria-label="Kontrol Interaktif Struktur Lapisan Bumi">
+          <div class="earth3d-dock">
+            <div class="earth3d-layer-pills" role="group" aria-label="Pilih Lapisan Bumi">
+              ${LAYER_DATA.map(
+                l => {
+                  let shortName = l.name.split(' (')[0];
+                  if (shortName === 'Litosfer & Kerak Bumi') shortName = 'Kerak Bumi';
+                  return `<button type="button" class="e3d-pill" data-layer="${l.index}" title="Fokuskan ke ${l.name}">
+                    <i style="background:${l.accent}"></i><span>${shortName}</span>
+                  </button>`;
+                }
+              ).join('')}
+            </div>
+            <div class="earth3d-dock-divider" aria-hidden="true"></div>
+            <div class="earth3d-ctrls" role="group" aria-label="Alat Viewport">
+              <button type="button" class="e3d-ctrl-btn active" data-action="play" title="Jeda / Mainkan Animasi (Spasi)" aria-label="Jeda Animasi">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <span class="e3d-btn-label">Jeda</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="explode" title="Pisahkan Anatomi Lapisan 3D (P)" aria-label="Pisahkan Lapisan">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg>
+                <span class="e3d-btn-label">Pisahkan</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn active" data-action="labels" title="Tampilkan / Sembunyikan Label (L)" aria-label="Toggle Label">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><circle cx="7" cy="7" r="1.5"></circle></svg>
+                <span class="e3d-btn-label">Label</span>
+              </button>
+              <button type="button" class="e3d-ctrl-btn" data-action="reset" title="Reset Sudut Kamera (R)" aria-label="Reset Tampilan">
+                <svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span class="e3d-btn-label">Reset</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -879,40 +954,61 @@
       this.simTitleEl = this.wrap.querySelector('.sim-title');
       this.simSubEl = this.wrap.querySelector('.sim-sub');
       this.popupEl = this.wrap.querySelector('.earth3d-layer-popup');
+      if (!this._cleanups) this._cleanups = [];
+      this._dockPicker = createDockPicker({
+        wrap: this.wrap,
+        defaultLabel: 'Lapisan',
+        resetLabel: 'Semua Lapisan',
+        onClear: () => this.selectLayer(null)
+      });
+      this._cleanups.push(() => this._dockPicker?.destroy());
     }
 
     initWebGL() {
-      const gl = this.glCanvas.getContext('webgl', { antialias: true, alpha: true });
+      const gl = this.glCanvas.getContext('webgl', {
+        antialias: this.perf.useAntialias,
+        alpha: this.perf.useAlpha,
+        powerPreference: 'high-performance'
+      });
       this.gl = gl;
+      this.programReady = false;
       if (!gl) return;
 
-      const vs = compileShader(gl, gl.VERTEX_SHADER, VERT_SRC);
-      const fs = compileShader(gl, gl.FRAGMENT_SHADER, FRAG_SRC);
-      const prog = gl.createProgram();
-      gl.attachShader(prog, vs);
-      gl.attachShader(prog, fs);
-      gl.linkProgram(prog);
-      gl.useProgram(prog);
-      this.prog = prog;
-
-      this.attribs = {
-        aPos: gl.getAttribLocation(prog, 'aPos'),
-        aNorm: gl.getAttribLocation(prog, 'aNorm'),
-        aUV: gl.getAttribLocation(prog, 'aUV'),
-        aSurfType: gl.getAttribLocation(prog, 'aSurfType')
-      };
-      this.uniforms = {
-        uMVP: gl.getUniformLocation(prog, 'uMVP'),
-        uOffset: gl.getUniformLocation(prog, 'uOffset'),
-        uScale: gl.getUniformLocation(prog, 'uScale'),
-        uLayerIndex: gl.getUniformLocation(prog, 'uLayerIndex'),
-        uTime: gl.getUniformLocation(prog, 'uTime'),
-        uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
-        uDim: gl.getUniformLocation(prog, 'uDim'),
-        uEye: gl.getUniformLocation(prog, 'uEye'),
-        uEarthTex: gl.getUniformLocation(prog, 'uEarthTex'),
-        uMaterialTex: gl.getUniformLocation(prog, 'uMaterialTex')
-      };
+      const fragSrc = buildMobileFragmentSource(FRAG_SRC, this.perf.shaderMobileLite);
+      this._progHandle = linkProgramAsync(
+        gl,
+        VERT_SRC,
+        fragSrc,
+        (prog, vs, fs) => {
+          if (this.isDestroyed || !this.gl) return;
+          this.vs = vs;
+          this.fs = fs;
+          this.prog = prog;
+          this.attribs = {
+            aPos: gl.getAttribLocation(prog, 'aPos'),
+            aNorm: gl.getAttribLocation(prog, 'aNorm'),
+            aUV: gl.getAttribLocation(prog, 'aUV'),
+            aSurfType: gl.getAttribLocation(prog, 'aSurfType')
+          };
+          this.uniforms = {
+            uMVP: gl.getUniformLocation(prog, 'uMVP'),
+            uOffset: gl.getUniformLocation(prog, 'uOffset'),
+            uScale: gl.getUniformLocation(prog, 'uScale'),
+            uLayerIndex: gl.getUniformLocation(prog, 'uLayerIndex'),
+            uTime: gl.getUniformLocation(prog, 'uTime'),
+            uHighlight: gl.getUniformLocation(prog, 'uHighlight'),
+            uDim: gl.getUniformLocation(prog, 'uDim'),
+            uEye: gl.getUniformLocation(prog, 'uEye'),
+            uEarthTex: gl.getUniformLocation(prog, 'uEarthTex'),
+            uMaterialTex: gl.getUniformLocation(prog, 'uMaterialTex')
+          };
+          this.programReady = true;
+          this._forceHudRedraw = true;
+        }
+      );
+      this.vs = this._progHandle.vs;
+      this.fs = this._progHandle.fs;
+      this.prog = this._progHandle.prog;
 
       // Buat placeholder tekstur 1x1 sebelum peta satelit 2048x1024 selesai diunggah
       this.earthTex = gl.createTexture();
@@ -928,7 +1024,13 @@
       requestEarthTextures(this);
 
       this.meshes = LAYER_DATA.map((layer, idx) => {
-        const geom = createShellGeometry(layer.rInner, layer.rOuter, idx > 0);
+        const geom = createShellGeometry(
+          layer.rInner,
+          layer.rOuter,
+          idx > 0,
+          this.perf.earthLatSegs,
+          this.perf.earthLonSegs
+        );
         const posBuf = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
         gl.bufferData(gl.ARRAY_BUFFER, geom.positions, gl.STATIC_DRAW);
@@ -961,6 +1063,9 @@
 
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
+      gl.frontFace(gl.CW);
+      gl.enable(gl.CULL_FACE);
+      gl.cullFace(gl.BACK);
     }
 
     uploadEarthTextures(albCanvas, matCanvas) {
@@ -1090,22 +1195,33 @@
           if (act === 'play') {
             this.isPlaying = !this.isPlaying;
             btn.classList.toggle('active', this.isPlaying);
-            btn.innerHTML = this.isPlaying ? '⏸ Jeda' : '▶ Putar';
+            btn.setAttribute('aria-label', this.isPlaying ? 'Jeda Animasi' : 'Putar Animasi');
+            btn.innerHTML = this.isPlaying
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg><span class="e3d-btn-label">Jeda</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span class="e3d-btn-label">Putar</span>`;
           } else if (act === 'explode') {
             this.isExploded = !this.isExploded;
             btn.classList.toggle('active', this.isExploded);
-            btn.innerHTML = this.isExploded ? '🧲 Satukan' : '🧩 Pisahkan';
+            btn.setAttribute('aria-label', this.isExploded ? 'Satukan Lapisan' : 'Pisahkan Lapisan');
+            btn.innerHTML = this.isExploded
+              ? `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"></path><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"></path></svg><span class="e3d-btn-label">Satukan</span>`
+              : `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
             if (typeof this.onInspect === 'function') {
               this.onInspect({ type: 'action', action: 'explode', state: this.isExploded });
             }
           } else if (act === 'labels') {
             this.showLabels = !this.showLabels;
+            this._forceHudRedraw = true;
             btn.classList.toggle('active', this.showLabels);
           } else if (act === 'reset') {
             this.userInteracting = false;
             this.isExploded = false;
-            this.wrap.querySelector('[data-action="explode"]').classList.remove('active');
-            this.wrap.querySelector('[data-action="explode"]').innerHTML = '🧩 Pisahkan';
+            const expBtn = this.wrap.querySelector('[data-action="explode"]');
+            if (expBtn) {
+              expBtn.classList.remove('active');
+              expBtn.setAttribute('aria-label', 'Pisahkan Lapisan');
+              expBtn.innerHTML = `<svg class="e3d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .88 1.66l6.05 4.07a2 2 0 0 0 2.17.05l9.95-6.12a2 2 0 0 0 .95-1.7V8.06a2 2 0 0 0-.88-1.66Z"></path><path d="m10 22 10-6.1"></path><path d="m10 15.5 11-6.7"></path><path d="m3 8 7 4.5"></path></svg><span class="e3d-btn-label">Pisahkan</span>`;
+            }
             this.selectLayer(null);
             this.onSlideChange(this.slideIndex);
           }
@@ -1114,6 +1230,7 @@
     }
 
     handleCanvasClick(clientX, clientY) {
+      if (this.hideSpoilers) return;
       const rect = this.hudCanvas.getBoundingClientRect();
       const px = clientX - rect.left;
       const py = clientY - rect.top;
@@ -1147,9 +1264,11 @@
 
     selectLayer(layerIdx, fromPill = false) {
       this.selectedLayer = layerIdx;
+      this._forceHudRedraw = true;
       this.wrap.querySelectorAll('.e3d-pill').forEach((btn, i) => {
         btn.classList.toggle('active', i === layerIdx);
       });
+      this._dockPicker?.sync();
 
       if (typeof this.onInspect === 'function' && layerIdx !== null && layerIdx !== undefined) {
         this.onInspect({ type: 'layer', id: layerIdx, name: LAYER_DATA[layerIdx]?.name });
@@ -1181,8 +1300,24 @@
       this.popupEl.querySelector('.lp-comp').textContent = d.comp;
     }
 
+    setQuizState(hideSpoilers) {
+      const next = Boolean(hideSpoilers);
+      if (this.hideSpoilers === next) return;
+      this.hideSpoilers = next;
+      if (this.wrap) {
+        this.wrap.classList.toggle('quiz-hide-spoilers', next);
+      }
+      this._forceHudRedraw = true;
+      if (next) {
+        this.selectLayer(null);
+      } else {
+        this.onSlideChange(this.slideIndex);
+      }
+    }
+
     onSlideChange(slideIdx) {
       this.slideIndex = Math.max(0, Math.min(SLIDE_MODES.length - 1, slideIdx));
+      this._forceHudRedraw = true;
       const mode = SLIDE_MODES[this.slideIndex];
       this.userInteracting = false;
       this.targetYaw = mode.targetYaw;
@@ -1192,7 +1327,7 @@
       if (this.simTitleEl) this.simTitleEl.textContent = mode.badge;
       if (this.simSubEl) this.simSubEl.textContent = mode.hint;
 
-      if (mode.focusLayer !== null) {
+      if (mode.focusLayer !== null && !this.hideSpoilers) {
         this.selectLayer(mode.focusLayer);
       } else {
         this.selectLayer(null);
@@ -1200,21 +1335,31 @@
     }
 
     resizeIfNeeded() {
+      if (!this._needsResize && this.cssW > 0 && this.cssH > 0) return true;
       const w = this.wrap.clientWidth;
       const h = this.wrap.clientHeight;
       if (w <= 0 || h <= 0) return false;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const pw = Math.round(w * dpr);
-      const ph = Math.round(h * dpr);
+      const rawDpr = window.devicePixelRatio || 1;
+      const glDpr = Math.min(rawDpr, this.perf.maxDpr);
+      const hudDpr = Math.min(rawDpr, this.perf.hudDpr);
+      const pw = Math.round(w * glDpr);
+      const ph = Math.round(h * glDpr);
+      const hpw = Math.round(w * hudDpr);
+      const hph = Math.round(h * hudDpr);
       if (this.glCanvas.width !== pw || this.glCanvas.height !== ph) {
         this.glCanvas.width = pw;
         this.glCanvas.height = ph;
-        this.hudCanvas.width = pw;
-        this.hudCanvas.height = ph;
+      }
+      if (this.hudCanvas.width !== hpw || this.hudCanvas.height !== hph) {
+        this.hudCanvas.width = hpw;
+        this.hudCanvas.height = hph;
       }
       this.cssW = w;
       this.cssH = h;
-      this.dpr = dpr;
+      this.dpr = glDpr;
+      this.hudDpr = hudDpr;
+      this._needsResize = false;
+      this._forceHudRedraw = true;
       return true;
     }
 
@@ -1230,28 +1375,28 @@
         this.rafId = null;
         return;
       }
-      if (document.hidden || (this.cardEl && this.cardEl.offsetParent === null)) {
+      if (document.hidden) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
-      const pageEl = this.cardEl ? this.cardEl.closest('.page') : null;
+      const pageEl = this._pageEl;
       if (pageEl && !pageEl.classList.contains('active')) {
         this.isPaused = true;
         this.rafId = null;
         return;
       }
       if (!this.resizeIfNeeded()) {
-        this.isPaused = true;
-        this.rafId = null;
+        if (!this.isDestroyed && !this.isPaused) {
+          this.rafId = requestAnimationFrame(this.animate);
+        }
         return;
       }
       this.rafId = requestAnimationFrame(this.animate);
       if (typeof now !== 'number') now = performance.now();
       const dt = Math.min(0.05, Math.max(0, (now - this.lastFrameTime) * 0.001));
       this.lastFrameTime = now;
-
-      
+      this._frameCounter++;
 
       if (this.isPlaying) {
         this.simTime += dt;
@@ -1285,16 +1430,37 @@
       const mvp = this._mvpMat;
       this.lastMVP = mvp;
 
-      this.renderWebGL(mvp, eye);
-      this.renderHUD(mvp, eye);
+      try {
+        if (!this.programReady) return;
+        this.renderWebGL(mvp, eye);
+        const shouldDrawHud =
+          this._forceHudRedraw ||
+          this.isDragging ||
+          this.perf.hudFrameSkip <= 1 ||
+          this._frameCounter % this.perf.hudFrameSkip === 0;
+        if (shouldDrawHud) {
+          this._forceHudRedraw = false;
+          this.renderHUD(mvp, eye);
+        }
+        if (!this._hasFiredReady && typeof this.onReady === 'function') {
+          this._hasFiredReady = true;
+          this.onReady();
+        }
+      } catch (err) {
+        console.warn('EarthViewer render frame skipped:', err);
+      }
     }
 
     renderWebGL(mvp, eye) {
       const gl = this.gl;
-      if (!gl) return;
+      if (!gl || !this.programReady || !this.prog) return;
 
       gl.viewport(0, 0, this.glCanvas.width, this.glCanvas.height);
-      gl.clearColor(0, 0, 0, 0);
+      if (this.perf.useAlpha) {
+        gl.clearColor(0, 0, 0, 0);
+      } else {
+        gl.clearColor(0.09, 0.09, 0.13, 1.0);
+      }
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       gl.useProgram(this.prog);
@@ -1310,7 +1476,8 @@
       gl.bindTexture(gl.TEXTURE_2D, this.materialTex);
       gl.uniform1i(this.uniforms.uMaterialTex, 1);
 
-      for (let i = 0; i < this.meshes.length; i++) {
+      // Render front-to-back (luar -> dalam) agar Early-Z menolak piksel tersembunyi
+      for (let i = this.meshes.length - 1; i >= 0; i--) {
         const m = this.meshes[i];
         const off = this.getLayerOffset(i);
         const isSel = this.selectedLayer === i;
@@ -1348,8 +1515,9 @@
       const ctx = this.ctx2d;
       const w = this.cssW;
       const h = this.cssH;
+      const hudDpr = this.hudDpr || this.dpr || 1;
       ctx.save();
-      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.setTransform(hudDpr, 0, 0, hudDpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
       // Hitung seberapa menghadap kamera ke kuadran irisan (+X, +Z)
@@ -1380,7 +1548,9 @@
       }
 
       // 2. Pin Label Anatomi 3D
-      this.drawLayerLabels3D(ctx, mvp, w, h, interiorAlpha, eye);
+      if (!this.hideSpoilers) {
+        this.drawLayerLabels3D(ctx, mvp, w, h, interiorAlpha, eye);
+      }
 
       ctx.restore();
     }
@@ -1420,16 +1590,18 @@
       sPaths.forEach((pts, idx) => {
         this.drawAnimatedRay3D(ctx, mvp, w, h, pts, '#f7c948', 2.2, (this.simTime * 0.65 + idx * 0.3) % 1.0);
         const stopPt = projectPoint3D(pts[pts.length - 1], mvp, w, h);
-        if (stopPt) {
+        if (stopPt && !this.hideSpoilers) {
           ctx.fillStyle = '#ffffff';
           ctx.font = '400 10.5px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
           ctx.fillText('✕ S Terhenti (Cair)', stopPt.x + 6, stopPt.y + 4);
         }
       });
 
-      const shadowAnchor = projectPoint3D([0.35, -0.88, 0.35], mvp, w, h);
-      if (shadowAnchor) {
-        this.drawPillTag(ctx, shadowAnchor.x, shadowAnchor.y, '🌑 Zona Bayangan (Shadow Zone 103°–142°)', 'rgba(14,42,58,0.9)', '#38bdf8');
+      if (!this.hideSpoilers) {
+        const shadowAnchor = projectPoint3D([0.35, -0.88, 0.35], mvp, w, h);
+        if (shadowAnchor) {
+          this.drawPillTag(ctx, shadowAnchor.x, shadowAnchor.y, 'Zona Bayangan (Shadow Zone 103°–142°)', 'rgba(14,42,58,0.9)', '#38bdf8');
+        }
       }
     }
 
@@ -1460,16 +1632,19 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const ang = 0.65 + idx * 0.42;
-        const lblPt = projectPoint3D([rg.r * Math.sin(ang), rg.r * Math.cos(ang), 0], mvp, w, h);
-        if (lblPt) {
-          this.drawPillTag(ctx, lblPt.x, lblPt.y, rg.label, 'rgba(9,27,38,0.9)', rg.color);
+        if (!this.hideSpoilers) {
+          const ang = 0.65 + idx * 0.42;
+          const lblPt = projectPoint3D([rg.r * Math.sin(ang), rg.r * Math.cos(ang), 0], mvp, w, h);
+          if (lblPt) {
+            this.drawPillTag(ctx, lblPt.x, lblPt.y, rg.label, 'rgba(9,27,38,0.9)', rg.color);
+          }
         }
       });
     }
 
     // Slide 3: Perbandingan Kerak Benua (SiAl) vs Kerak Samudra (SiMa)
     drawCrustComparison3D(ctx, mvp, w, h, eye) {
+      if (this.hideSpoilers) return;
       const off = this.getLayerOffset(4);
       const cPos = [0.72 + off[0], 0.68 + off[1], 0.0 + off[2]];
       const oPos = [0.0 + off[0], 0.62 + off[1], 0.76 + off[2]];
@@ -1483,7 +1658,7 @@
         if (alphaC > 0.05) {
           ctx.save();
           ctx.globalAlpha *= alphaC;
-          this.drawPillTag(ctx, ptCont.x, ptCont.y - 16, '🏔️ Kerak Benua: 30–70 km (SiAl · 2,7 g/cm³)', 'rgba(14,42,58,0.92)', '#f7c948');
+          this.drawPillTag(ctx, ptCont.x, ptCont.y - 16, 'Kerak Benua: 30–70 km (SiAl · 2,7 g/cm³)', 'rgba(14,42,58,0.92)', '#f7c948');
           ctx.restore();
         }
       }
@@ -1493,7 +1668,7 @@
         if (alphaO > 0.05) {
           ctx.save();
           ctx.globalAlpha *= alphaO;
-          this.drawPillTag(ctx, ptOcean.x, ptOcean.y + 18, '🌊 Kerak Samudra: 5–10 km (SiMa · 3,0 g/cm³)', 'rgba(14,42,58,0.92)', '#38bdf8');
+          this.drawPillTag(ctx, ptOcean.x, ptOcean.y + 18, 'Kerak Samudra: 5–10 km (SiMa · 3,0 g/cm³)', 'rgba(14,42,58,0.92)', '#38bdf8');
           ctx.restore();
         }
       }
@@ -1686,7 +1861,11 @@
       ctx.font = '400 11.5px "Inter", -apple-system, BlinkMacSystemFont, sans-serif';
       const padX = 9;
       const dotSpace = 12;
-      const tw = ctx.measureText(text).width;
+      let tw = this._textWidthCache.get(text);
+      if (tw === undefined) {
+        tw = ctx.measureText(text).width;
+        this._textWidthCache.set(text, tw);
+      }
       const bw = tw + padX * 2 + dotSpace;
       const bh = 22;
       const bx = Math.max(6, Math.min(this.cssW - bw - 6, x - bw / 2));
@@ -1713,6 +1892,8 @@
   
     resize() {
       if (!this.isDestroyed && typeof this.resizeIfNeeded === 'function') {
+        this._needsResize = true;
+        this._forceHudRedraw = true;
         return this.resizeIfNeeded();
       }
     }
@@ -1737,6 +1918,15 @@
     destroy() {
       this.isDestroyed = true;
       this.isPaused = true;
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+      if (this._progHandle) {
+        this._progHandle.cancel();
+        this._progHandle = null;
+      }
+      this.programReady = false;
       if (this._cleanups && Array.isArray(this._cleanups)) {
         this._cleanups.forEach(fn => { try { fn(); } catch (e) {} });
         this._cleanups = null;
@@ -1745,51 +1935,70 @@
         try { this._io.disconnect(); } catch (e) {}
         this._io = null;
       }
+      if (this._ro) {
+        try { this._ro.disconnect(); } catch (e) {}
+        this._ro = null;
+      }
       if (typeof pendingViewers !== 'undefined' && Array.isArray(pendingViewers)) {
         const idx = pendingViewers.indexOf(this);
         if (idx !== -1) pendingViewers.splice(idx, 1);
       }
-      if (this.rafId) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
       if (this.gl) {
         try {
+          if (this.vs) {
+            try { this.gl.deleteShader(this.vs); } catch (e) {}
+            this.vs = null;
+          }
+          if (this.fs) {
+            try { this.gl.deleteShader(this.fs); } catch (e) {}
+            this.fs = null;
+          }
           if (this.prog) {
-            this.gl.deleteProgram(this.prog);
+            try { this.gl.deleteProgram(this.prog); } catch (e) {}
             this.prog = null;
           }
           if (this.earthTex) {
-            this.gl.deleteTexture(this.earthTex);
+            try { this.gl.deleteTexture(this.earthTex); } catch (e) {}
             this.earthTex = null;
           }
           if (this.materialTex) {
-            this.gl.deleteTexture(this.materialTex);
+            try { this.gl.deleteTexture(this.materialTex); } catch (e) {}
             this.materialTex = null;
           }
           if (this.meshes) {
             this.meshes.forEach(m => {
-              if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
-              if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
-              if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
-              if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
-              if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              try {
+                if (m.posBuf) this.gl.deleteBuffer(m.posBuf);
+                if (m.normBuf) this.gl.deleteBuffer(m.normBuf);
+                if (m.uvBuf) this.gl.deleteBuffer(m.uvBuf);
+                if (m.surfBuf) this.gl.deleteBuffer(m.surfBuf);
+                if (m.idxBuf) this.gl.deleteBuffer(m.idxBuf);
+              } catch (e) {}
             });
             this.meshes = null;
           }
-        } catch (e) {}
+          releaseWebGLContextAsync(this.gl);
+        } catch (e) {
+          console.warn('WebGL destroy warning:', e);
+        }
+        this.gl = null;
       }
       if (this.glCanvas) {
         this.glCanvas.width = 1;
         this.glCanvas.height = 1;
+        this.glCanvas = null;
       }
       if (this.hudCanvas) {
         this.hudCanvas.width = 1;
         this.hudCanvas.height = 1;
+        this.hudCanvas = null;
       }
+      this.ctx2d = null;
       if (this.wrap && this.wrap.parentNode) {
         this.wrap.parentNode.removeChild(this.wrap);
+        this.wrap = null;
       }
+      this.cardEl = null;
     }
 
 }

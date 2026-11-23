@@ -1,19 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ALL_MODULES } from '../data/modules';
 import { SliderContainer } from '../components/common/SliderContainer';
-import { EarthViewer, TectonicViewer, VolcanoViewer, EndogenViewer } from '../components/3d';
+import { SeismicPreloader, PreloaderModuleType } from '../components/common/SeismicPreloader';
 import { progressStore } from '../data/progressStore';
 import { INQUIRY_CHALLENGES } from '../data/inquiryChallenges';
 import { sound } from '../utils/soundEffects';
 import { MagmaSandboxModal } from '../components/common/MagmaSandboxModal';
 import { MagmaParams } from '../data/magmaPhysics';
+import { useIsMobileViewport } from '../utils/devicePerf';
+
+// Lazy-load masing-masing engine 3D secara terpisah agar pindah halaman hanya memuat 1 engine aktif
+const EarthViewer = lazy(() => import('../components/3d/EarthViewer').then((m) => ({ default: m.EarthViewer })));
+const TectonicViewer = lazy(() => import('../components/3d/TectonicViewer').then((m) => ({ default: m.TectonicViewer })));
+const VolcanoViewer = lazy(() => import('../components/3d/VolcanoViewer').then((m) => ({ default: m.VolcanoViewer })));
+const EndogenViewer = lazy(() => import('../components/3d/EndogenViewer').then((m) => ({ default: m.EndogenViewer })));
 
 const NEXT_MODULE_CONFIG: Record<string, { target: string; label: string }> = {
-  struktur: { target: '/modul/lempeng', label: 'Lanjut ke Lempeng Tektonik 🧩' },
-  lempeng: { target: '/modul/vulkanisme', label: 'Lanjut ke Vulkanisme 🌋' },
-  vulkanisme: { target: '/modul/endogen', label: 'Lanjut ke Tenaga Endogen ⛰️' },
-  endogen: { target: '/kuis', label: 'Uji Pemahaman di Kuis 📝' }
+  struktur: { target: '/modul/lempeng', label: 'Lanjut ke Lempeng Tektonik' },
+  lempeng: { target: '/modul/vulkanisme', label: 'Lanjut ke Vulkanisme' },
+  vulkanisme: { target: '/modul/endogen', label: 'Lanjut ke Tenaga Endogen' },
+  endogen: { target: '/kuis', label: 'Uji Pemahaman di Kuis' }
 };
 
 interface ModulePageProps {
@@ -25,15 +32,10 @@ export const ModulePage: React.FC<ModulePageProps> = ({ currentModuleId, isActiv
   const { moduleId: paramModuleId = 'struktur' } = useParams<{ moduleId: string }>();
   const moduleId = currentModuleId || paramModuleId || 'struktur';
   const navigate = useNavigate();
+  const isMobile = useIsMobileViewport();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [mobileView, setMobileView] = useState<'model' | 'slider'>('model');
-
-  // Sinkronisasi reset slide index seketika saat moduleId berubah (cegah race condition index out of bounds)
-  const [prevModuleId, setPrevModuleId] = useState(moduleId);
-  if (prevModuleId !== moduleId) {
-    setPrevModuleId(moduleId);
-    setCurrentSlide(0);
-  }
+  const isViewerActive = isActive && (!isMobile || mobileView === 'model');
 
   const moduleData = ALL_MODULES[moduleId] || ALL_MODULES.struktur;
   const nextConfig = NEXT_MODULE_CONFIG[moduleId] || { target: '/kuis', label: 'Berikutnya →' };
@@ -121,14 +123,14 @@ export const ModulePage: React.FC<ModulePageProps> = ({ currentModuleId, isActiv
           className={`mobile-toggle-btn ${mobileView === 'model' ? 'active' : ''}`}
           onClick={() => setMobileView('model')}
         >
-          🧊 Model 3D
+          Model 3D
         </button>
         <button
           type="button"
           className={`mobile-toggle-btn ${mobileView === 'slider' ? 'active' : ''}`}
           onClick={() => setMobileView('slider')}
         >
-          📖 Slide Materi
+          Slide Materi
         </button>
 
         {moduleId === 'vulkanisme' && (
@@ -141,44 +143,54 @@ export const ModulePage: React.FC<ModulePageProps> = ({ currentModuleId, isActiv
             }}
             title="Buka Laboratorium Fisika Magma Semeru"
           >
-            🧪 Sandbox Magma
+            Sandbox Magma
           </button>
         )}
       </div>
 
       <div className={`material-split ${mobileView === 'model' ? 'show-model' : ''}`}>
-        {/* Kolom Kiri: Model 3D Tunggal yang Aktif dengan Jembatan Inspeksi */}
-        {moduleId === 'struktur' && (
-          <EarthViewer
-            slideIndex={currentSlide}
-            pageId="struktur"
-            isActive={isActive}
-            onInspect={handleInspect}
-          />
-        )}
-        {moduleId === 'lempeng' && (
-          <TectonicViewer
-            slideIndex={currentSlide}
-            isActive={isActive}
-            onInspect={handleInspect}
-          />
-        )}
-        {moduleId === 'vulkanisme' && (
-          <VolcanoViewer
-            slideIndex={currentSlide}
-            isActive={isActive}
-            onInspect={handleInspect}
-            sandboxActive={isSandboxOpen}
-            sandboxParams={sandboxParams}
-            isErupting={isErupting}
-          />
-        )}
-        {moduleId === 'endogen' && (
-          <EndogenViewer
-            slideIndex={currentSlide}
-            isActive={isActive}
-            onInspect={handleInspect}
-          />
+        {/* Kolom Kiri: Model 3D Tunggal yang Aktif dengan Lazy-Chunk & Jembatan Inspeksi */}
+        {isActive && (
+          <Suspense
+            fallback={
+              <div className="model-frame-card" style={{ position: 'relative' }}>
+                <SeismicPreloader moduleType={(moduleId as PreloaderModuleType) || 'struktur'} />
+              </div>
+            }
+          >
+            {moduleId === 'struktur' && (
+              <EarthViewer
+                slideIndex={currentSlide}
+                pageId="struktur"
+                isActive={isViewerActive}
+                onInspect={handleInspect}
+              />
+            )}
+            {moduleId === 'lempeng' && (
+              <TectonicViewer
+                slideIndex={currentSlide}
+                isActive={isViewerActive}
+                onInspect={handleInspect}
+              />
+            )}
+            {moduleId === 'vulkanisme' && (
+              <VolcanoViewer
+                slideIndex={currentSlide}
+                isActive={isViewerActive}
+                onInspect={handleInspect}
+                sandboxActive={isSandboxOpen}
+                sandboxParams={sandboxParams}
+                isErupting={isErupting}
+              />
+            )}
+            {moduleId === 'endogen' && (
+              <EndogenViewer
+                slideIndex={currentSlide}
+                isActive={isViewerActive}
+                onInspect={handleInspect}
+              />
+            )}
+          </Suspense>
         )}
 
         {/* Kolom Kanan: Slider Konten Materi + Gerbang Inkuiri Terbimbing */}
