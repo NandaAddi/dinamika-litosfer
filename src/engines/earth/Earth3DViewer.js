@@ -1412,7 +1412,8 @@ import { createDockPicker } from '../../utils/dockPicker';
       const targetExplode = this.isExploded ? 1.0 : 0.0;
       this.explodeAmount += (targetExplode - this.explodeAmount) * 0.1;
 
-      const dist = 4.25 / this.zoom;
+      const baseDist = this.pageId === 'beranda' ? 3.85 : 4.25;
+      const dist = baseDist / this.zoom;
       if (!this._projMat) {
         this._projMat = new Float32Array(16);
         this._viewMat = new Float32Array(16);
@@ -1424,8 +1425,9 @@ import { createDockPicker } from '../../utils/dockPicker';
       this._eye[2] = dist * Math.cos(this.pitch) * Math.cos(this.yaw);
       const eye = this._eye;
 
+      const lookY = this.pageId === 'beranda' ? 0.0 : 0.03;
       mat4Perspective(0.66, this.cssW / this.cssH, 0.1, 20.0, this._projMat);
-      mat4LookAt(eye, [0, 0.03, 0], [0, 1, 0], this._viewMat);
+      mat4LookAt(eye, [0, lookY, 0], [0, 1, 0], this._viewMat);
       mat4Multiply(this._projMat, this._viewMat, this._mvpMat);
       const mvp = this._mvpMat;
       this.lastMVP = mvp;

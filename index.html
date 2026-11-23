@@ -36,7 +36,7 @@
     #preloader {
       position: fixed;
       inset: 0;
-      background: var(--color-onyx-canvas);
+      background: #050507;
       z-index: 999999;
       display: flex;
       align-items: center;
@@ -54,58 +54,25 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 24px;
-      max-width: 440px;
+      padding: 20px;
+      width: 100%;
+      max-width: 520px;
     }
     .pre-logo-wrap {
       position: relative;
-      width: 116px;
-      height: 116px;
+      width: min(420px, 88vw);
+      max-height: 52vh;
+      aspect-ratio: 8 / 5;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 22px;
-    }
-    .pre-ring {
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(226, 227, 237, 0.18);
-      border-top-color: var(--color-cobalt);
-      animation: preRingSpin 3s linear infinite;
-      will-change: transform;
+      margin-bottom: 18px;
     }
     .pre-logo {
-      width: 100px;
-      height: 100px;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
-      border-radius: 50%;
-      animation: preLogoPulse 2.4s ease-in-out infinite;
-      will-change: transform;
-    }
-    @keyframes preRingSpin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes preLogoPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
-    .pre-title {
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-      font-size: 28px;
-      font-weight: 500;
-      color: var(--color-ivory-text);
-      letter-spacing: 0.015em;
-      margin: 0 0 6px 0;
-    }
-    .pre-title span { color: var(--color-ivory-text); }
-    .pre-sub {
-      font-size: 13.5px;
-      font-weight: 400;
-      color: var(--color-ash-text);
-      margin: 0 0 22px 0;
-      letter-spacing: 0.01em;
+      display: block;
     }
     .pre-progress-track {
       width: 240px;
@@ -132,15 +99,12 @@
   </style>
 </head>
 <body>
-  <!-- Preloader Resmi UM -->
+  <!-- Preloader Litoverse -->
   <div id="preloader">
     <div class="pre-content">
       <div class="pre-logo-wrap">
-        <div class="pre-ring"></div>
-        <img src="/assets/images/Lambang-UM.webp" alt="Lambang Universitas Negeri Malang" class="pre-logo" width="100" height="100" />
+        <img src="/litoverse-logo.svg" alt="Logo Animasi LITOVERSE" class="pre-logo" width="800" height="500" />
       </div>
-      <h2 class="pre-title">Dinamika <span>Litosfer</span></h2>
-      <p class="pre-sub">Media Pembelajaran Geografi · Universitas Negeri Malang</p>
       <div class="pre-progress-track">
         <div class="pre-progress-bar" id="pre-bar"></div>
       </div>

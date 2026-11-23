@@ -51,7 +51,7 @@ export function getDevicePerfProfile(): DevicePerfProfile {
       maxDpr: isLowEnd ? 1.0 : 1.25,
       hudDpr: 1.0,
       useAntialias: false,
-      useAlpha: false,
+      useAlpha: true,
       shaderMobileLite: true,
       earthTexWidth: 1024,
       earthTexHeight: 512,

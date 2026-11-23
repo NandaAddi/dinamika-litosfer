@@ -17,6 +17,20 @@ export interface StudentProfile {
   className: string;
 }
 
+export interface ModuleRequirement {
+  id: 'struktur' | 'lempeng' | 'vulkanisme' | 'endogen';
+  num: string;
+  title: string;
+  path: string;
+}
+
+export const REQUIRED_MODULES: readonly ModuleRequirement[] = [
+  { id: 'struktur', num: '01', title: 'Struktur Bumi', path: '/modul/struktur' },
+  { id: 'lempeng', num: '02', title: 'Lempeng Tektonik', path: '/modul/lempeng' },
+  { id: 'vulkanisme', num: '03', title: 'Vulkanisme Semeru', path: '/modul/vulkanisme' },
+  { id: 'endogen', num: '04', title: 'Tenaga Endogen', path: '/modul/endogen' }
+];
+
 export interface ProgressData {
   profile: StudentProfile;
   xp: number;
@@ -220,6 +234,29 @@ class ProgressStore {
 
   public isChallengeCompleted(challengeId: string): boolean {
     return Array.isArray(this.data.completedChallenges) && this.data.completedChallenges.includes(challengeId);
+  }
+
+  public isModuleCompleted(moduleId: string): boolean {
+    return this.data.completedModules.includes(moduleId);
+  }
+
+  public getQuizUnlockStatus(): {
+    unlocked: boolean;
+    completedCount: number;
+    totalRequired: number;
+    remainingModules: ModuleRequirement[];
+  } {
+    const remainingModules = REQUIRED_MODULES.filter(
+      (mod) => !this.data.completedModules.includes(mod.id)
+    );
+    const totalRequired = REQUIRED_MODULES.length;
+    const completedCount = totalRequired - remainingModules.length;
+    return {
+      unlocked: remainingModules.length === 0,
+      completedCount,
+      totalRequired,
+      remainingModules
+    };
   }
 
   public completeModule(moduleId: string): void {

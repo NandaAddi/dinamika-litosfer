@@ -8,6 +8,7 @@ import { HomePage } from '../../pages/HomePage';
 import { SeismicPreloader, PreloaderModuleType } from '../common/SeismicPreloader';
 import { sound } from '../../utils/soundEffects';
 import { registerServiceWorker } from '../../utils/pwaManager';
+import { progressStore } from '../../data/progressStore';
 
 // Dynamic Lazy Imports untuk modul berat dan modal dialog
 const ModulePage = lazy(() => import('../../pages/ModulePage').then(m => ({ default: m.ModulePage })));
@@ -125,6 +126,10 @@ export const MainLayout: React.FC = () => {
           '/kuis'
         ];
         const route = stageRoutes[parseInt(key, 10) - 1];
+        if (route === '/kuis' && !progressStore.getQuizUnlockStatus().unlocked) {
+          sound.quizWrong();
+          return;
+        }
         if (route) {
           sound.snap();
           navigate(route);

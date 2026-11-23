@@ -1,8 +1,9 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { QUIZ_QUESTIONS } from '../data/quiz';
 import { sound } from '../utils/soundEffects';
-import { progressStore } from '../data/progressStore';
+import { progressStore, REQUIRED_MODULES } from '../data/progressStore';
 import { SeismicPreloader } from '../components/common/SeismicPreloader';
 
 const EarthViewer = lazy(() =>
@@ -34,6 +35,15 @@ export const QuizPage: React.FC<QuizPageProps> = ({
   onOpenCertificate,
   onOpenBadges
 }) => {
+  const navigate = useNavigate();
+  const [unlockStatus, setUnlockStatus] = useState(() => progressStore.getQuizUnlockStatus());
+
+  useEffect(() => {
+    return progressStore.subscribe(() => {
+      setUnlockStatus(progressStore.getQuizUnlockStatus());
+    });
+  }, []);
+
   const [currentIdx, setCurrentIdx] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -185,6 +195,77 @@ export const QuizPage: React.FC<QuizPageProps> = ({
   const modelSpec = !isFinished ? currentQ.model3d : undefined;
   const hideSpoilers = !isAnswered;
   const quizBadgeTitle = isAnswered ? undefined : 'Objek 3D · Putar untuk mengamati';
+
+  if (!unlockStatus.unlocked) {
+    const nextModule = unlockStatus.remainingModules[0] || REQUIRED_MODULES[0];
+    return (
+      <section className={`page fit-view ${isActive ? 'active' : ''}`} id="page-kuis">
+        <div className="quiz-box quiz-locked-box">
+          <div className="quiz-lock-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>
+              Kuis Evaluasi Terkunci · {unlockStatus.completedCount}/{unlockStatus.totalRequired} Modul
+            </span>
+          </div>
+
+          <h2 className="quiz-lock-title">Selesaikan Seluruh Materi Terlebih Dahulu</h2>
+          <p className="quiz-lock-desc">
+            Akses Kuis Evaluasi terbuka otomatis setelah seluruh 4 modul materi dipelajari hingga slide terakhir.
+          </p>
+
+          <div className="quiz-lock-list" role="list">
+            {REQUIRED_MODULES.map((mod) => {
+              const isDone = !unlockStatus.remainingModules.some((r) => r.id === mod.id);
+              return (
+                <button
+                  key={mod.id}
+                  type="button"
+                  role="listitem"
+                  className={`quiz-lock-item ${isDone ? 'done' : ''}`}
+                  onClick={() => {
+                    sound.snap();
+                    navigate(mod.path);
+                  }}
+                >
+                  <span className="qli-left">
+                    <span className="qli-num">{mod.num}</span>
+                    <span className="qli-title">{mod.title}</span>
+                  </span>
+                  <span className="qli-state">{isDone ? '✓ Selesai' : 'Belum selesai →'}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="quiz-lock-actions">
+            <button
+              type="button"
+              className="btn btn-magma"
+              onClick={() => {
+                sound.snap();
+                navigate(nextModule.path);
+              }}
+            >
+              Lanjut ke {nextModule.title}
+            </button>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                sound.snap();
+                navigate('/');
+              }}
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className={`page fit-view ${isActive ? 'active' : ''}`} id="page-kuis">

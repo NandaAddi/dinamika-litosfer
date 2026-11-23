@@ -1,0 +1,538 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" role="img" aria-label="LITOVERSE Preloader Animation">
+  <defs>
+    
+    <radialGradient id="globe-bg" cx="38%" cy="32%" r="68%">
+      <stop offset="0%" stop-color="#353942" />
+      <stop offset="48%" stop-color="#17191e" />
+      <stop offset="85%" stop-color="#0a0b0e" />
+      <stop offset="100%" stop-color="#050507" />
+    </radialGradient>
+
+    <linearGradient id="continent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c6ccd6" stop-opacity="0.72" />
+      <stop offset="55%" stop-color="#7c8391" stop-opacity="0.52" />
+      <stop offset="100%" stop-color="#3f444f" stop-opacity="0.45" />
+    </linearGradient>
+
+    <linearGradient id="globe-rim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.65" />
+      <stop offset="45%" stop-color="#9ca3af" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ff6b1a" stop-opacity="0.35" />
+    </linearGradient>
+
+    
+    <linearGradient id="volcano-body" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#3d3a3a" />
+      <stop offset="55%" stop-color="#1e1e24" />
+      <stop offset="100%" stop-color="#0e0f13" />
+    </linearGradient>
+
+    
+    <linearGradient id="magma-crack-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fff4b8" />
+      <stop offset="35%" stop-color="#ff9900" />
+      <stop offset="75%" stop-color="#ff3c00" />
+      <stop offset="100%" stop-color="#b81400" />
+    </linearGradient>
+
+    <radialGradient id="crater-burst" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="28%" stop-color="#ffe270" />
+      <stop offset="60%" stop-color="#ff6a00" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#ff2200" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="globe-aura" cx="50%" cy="52%" r="50%">
+      <stop offset="0%" stop-color="#ff5e00" stop-opacity="0.5" />
+      <stop offset="55%" stop-color="#ff2a00" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#ff2a00" stop-opacity="0" />
+    </radialGradient>
+
+    
+    <linearGradient id="flare-beam" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ff5e00" stop-opacity="0" />
+      <stop offset="25%" stop-color="#ff8c2b" stop-opacity="0.75" />
+      <stop offset="50%" stop-color="#fff7d6" stop-opacity="1" />
+      <stop offset="75%" stop-color="#ff8c2b" stop-opacity="0.75" />
+      <stop offset="100%" stop-color="#ff5e00" stop-opacity="0" />
+    </linearGradient>
+
+    
+    <linearGradient id="orbit-front" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="30%" stop-color="#e5e9f0" stop-opacity="0.7" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="70%" stop-color="#e5e9f0" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.08" />
+    </linearGradient>
+
+    <linearGradient id="orbit-back" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.05" />
+      <stop offset="50%" stop-color="#a5b0c2" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05" />
+    </linearGradient>
+
+    
+    <radialGradient id="o-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffaa33" stop-opacity="0.65" />
+      <stop offset="65%" stop-color="#ff4800" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#ff4800" stop-opacity="0" />
+    </radialGradient>
+
+    
+    <radialGradient id="glint-halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="35%" stop-color="#dbeafe" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+
+    
+    <clipPath id="globe-clip">
+      <circle cx="400" cy="285" r="127" />
+    </clipPath>
+
+    
+    <filter id="glow-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="glow-heavy" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="11" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="text-shadow" x="-15%" y="-30%" width="130%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.78" />
+    </filter>
+  </defs>
+
+  <style>
+    :root {
+      --dur: 4.5s;
+    }
+
+    /* Phase 1: Tectonic Pulse (0% - 32%)
+       Phase 2: Kinetic Surge  (32% - 64%)
+       Phase 3: Loop Convergence (64% - 100%) */
+
+    .aura {
+      transform-origin: 400px 285px;
+      animation: auraPulse var(--dur) ease-in-out infinite;
+    }
+
+    .pulse-ring-1 {
+      transform-origin: 400px 285px;
+      animation: seismicRing var(--dur) ease-out infinite;
+    }
+
+    .pulse-ring-2 {
+      transform-origin: 400px 285px;
+      animation: seismicRing var(--dur) ease-out infinite;
+      animation-delay: 0.28s;
+    }
+
+    .magma-outer {
+      animation: magmaOuter var(--dur) ease-in-out infinite;
+    }
+
+    .magma-mid {
+      animation: magmaMid var(--dur) ease-in-out infinite;
+    }
+
+    .magma-core {
+      animation: magmaCore var(--dur) ease-in-out infinite;
+    }
+
+    .volcano-veins {
+      animation: veinGlow var(--dur) ease-in-out infinite;
+    }
+
+    .crater-flash {
+      transform-origin: 400px 110px;
+      animation: craterBurst var(--dur) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+
+    .phase1-drop-1 {
+      transform-origin: 400px 104px;
+      animation: dropPulse var(--dur) ease-out infinite;
+    }
+    .phase1-drop-2 {
+      transform-origin: 392px 108px;
+      animation: dropPulseLeft var(--dur) ease-out infinite;
+    }
+    .phase1-drop-3 {
+      transform-origin: 408px 108px;
+      animation: dropPulseRight var(--dur) ease-out infinite;
+    }
+
+    .lava-arc {
+      stroke-dasharray: 28 190;
+      stroke-dashoffset: 32;
+      animation: shootLava var(--dur) cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    .lava-arc.d2 { animation-delay: 0.06s; }
+    .lava-arc.d3 { animation-delay: 0.12s; }
+
+    .spark-burst {
+      transform-origin: 400px 108px;
+      animation: sparksExplode var(--dur) ease-out infinite;
+    }
+
+    .lens-flare {
+      transform-origin: 400px 285px;
+      animation: flareSweep var(--dur) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+
+    .split-o-group {
+      transform-origin: 324px 285px;
+      animation: spinO var(--dur) cubic-bezier(0.45, 0, 0.2, 1) infinite;
+    }
+
+    .split-o-fill {
+      animation: colorO var(--dur) ease-in-out infinite;
+    }
+
+    .o-shock-1 {
+      transform-origin: 324px 285px;
+      animation: shockwaveO var(--dur) ease-out infinite;
+    }
+    .o-shock-2 {
+      transform-origin: 324px 285px;
+      animation: shockwaveO var(--dur) ease-out infinite;
+      animation-delay: 0.14s;
+    }
+
+    .orbital-rings {
+      transform-origin: 400px 320px;
+      animation: orbitalConverge var(--dur) ease-in-out infinite;
+    }
+
+    .embers-group {
+      animation: embersDrift var(--dur) ease-in-out infinite;
+    }
+
+    .star-glint {
+      transform-origin: 632px 256px;
+      animation: glintFlash var(--dur) ease-in-out infinite;
+    }
+
+    /* Keyframes */
+    @keyframes auraPulse {
+      0%, 100% { opacity: 0.14; transform: scale(0.95); }
+      22%      { opacity: 0.55; transform: scale(1.03); }
+      44%      { opacity: 0.95; transform: scale(1.12); }
+      68%      { opacity: 0.25; transform: scale(0.98); }
+    }
+
+    @keyframes seismicRing {
+      0%   { opacity: 0; transform: scale(0.96); }
+      8%   { opacity: 0.42; }
+      30%  { opacity: 0; transform: scale(1.36); }
+      100% { opacity: 0; transform: scale(1.36); }
+    }
+
+    @keyframes magmaOuter {
+      0%, 100% { opacity: 0.12; }
+      18%      { opacity: 0.72; }
+      42%      { opacity: 1; }
+      62%      { opacity: 0.45; }
+      82%      { opacity: 0.08; }
+    }
+
+    @keyframes magmaMid {
+      0%, 100% { opacity: 0.18; }
+      20%      { opacity: 0.88; }
+      42%      { opacity: 1; }
+      64%      { opacity: 0.35; }
+      82%      { opacity: 0.12; }
+    }
+
+    @keyframes magmaCore {
+      0%, 100% { opacity: 0; }
+      22%      { opacity: 0.45; }
+      38%      { opacity: 1; }
+      52%      { opacity: 0.95; }
+      65%      { opacity: 0; }
+    }
+
+    @keyframes veinGlow {
+      0%, 100% { opacity: 0.28; }
+      22%      { opacity: 0.85; }
+      44%      { opacity: 1; }
+      72%      { opacity: 0.42; }
+    }
+
+    @keyframes craterBurst {
+      0%, 100% { opacity: 0.12; transform: scale(0.45); }
+      20%      { opacity: 0.58; transform: scale(0.85); }
+      36%      { opacity: 1;    transform: scale(1.55); }
+      48%      { opacity: 0.95; transform: scale(1.32); }
+      64%      { opacity: 0.25; transform: scale(0.6); }
+    }
+
+    @keyframes dropPulse {
+      0%, 100% { opacity: 0; transform: translateY(10px) scale(0.5); }
+      10%      { opacity: 0.95; }
+      26%      { opacity: 1; transform: translateY(-22px) scale(1.05); }
+      38%      { opacity: 0; transform: translateY(-42px) scale(0.4); }
+    }
+
+    @keyframes dropPulseLeft {
+      0%, 100% { opacity: 0; transform: translate(0, 8px) scale(0.4); }
+      12%      { opacity: 0.9; }
+      28%      { opacity: 1; transform: translate(-14px, -18px) scale(0.95); }
+      40%      { opacity: 0; transform: translate(-24px, -30px) scale(0.3); }
+    }
+
+    @keyframes dropPulseRight {
+      0%, 100% { opacity: 0; transform: translate(0, 8px) scale(0.4); }
+      12%      { opacity: 0.9; }
+      28%      { opacity: 1; transform: translate(14px, -18px) scale(0.95); }
+      40%      { opacity: 0; transform: translate(24px, -30px) scale(0.3); }
+    }
+
+    @keyframes shootLava {
+      0%, 31%  { opacity: 0; stroke-dashoffset: 32; }
+      35%      { opacity: 1; }
+      54%      { opacity: 0.95; }
+      62%      { opacity: 0; stroke-dashoffset: -175; }
+      100%     { opacity: 0; stroke-dashoffset: -175; }
+    }
+
+    @keyframes sparksExplode {
+      0%, 32%  { opacity: 0; transform: scale(0.45) translateY(8px); }
+      40%      { opacity: 1; transform: scale(1.02) translateY(-6px); }
+      58%      { opacity: 0.85; transform: scale(1.22) translateY(-18px); }
+      68%      { opacity: 0; transform: scale(1.32) translateY(-24px); }
+      100%     { opacity: 0; transform: scale(0.45) translateY(8px); }
+    }
+
+    @keyframes flareSweep {
+      0%, 33%  { opacity: 0; transform: scaleX(0.15); }
+      42%      { opacity: 0.95; transform: scaleX(1.08); }
+      54%      { opacity: 0.72; transform: scaleX(0.96); }
+      65%      { opacity: 0; transform: scaleX(0.2); }
+      100%     { opacity: 0; transform: scaleX(0.15); }
+    }
+
+    @keyframes spinO {
+      0%, 8%   { transform: rotate(0deg) scale(1); }
+      32%      { transform: rotate(90deg) scale(1.03); }
+      46%      { transform: rotate(180deg) scale(1.08); }
+      62%, 100%{ transform: rotate(180deg) scale(1); }
+    }
+
+    @keyframes colorO {
+      0%, 32%  { fill: #ffffff; }
+      44%      { fill: #ffd27d; }
+      54%      { fill: #ff8c33; }
+      66%, 100%{ fill: #ffffff; }
+    }
+
+    @keyframes shockwaveO {
+      0%, 35%  { opacity: 0; transform: scale(0.75); }
+      42%      { opacity: 0.9; }
+      60%      { opacity: 0; transform: scale(2.15); }
+      100%     { opacity: 0; transform: scale(2.15); }
+    }
+
+    @keyframes orbitalConverge {
+      0%, 60%  { opacity: 0; transform: scaleX(0.84) scaleY(0.75); }
+      72%      { opacity: 0.92; transform: scaleX(1.02) scaleY(1); }
+      88%      { opacity: 0.85; transform: scaleX(1.06) scaleY(1.02); }
+      100%     { opacity: 0; transform: scaleX(0.84) scaleY(0.75); }
+    }
+
+    @keyframes embersDrift {
+      0%, 56%  { opacity: 0; transform: translateY(18px); }
+      68%      { opacity: 0.95; }
+      90%      { opacity: 0.6; transform: translateY(-28px); }
+      100%     { opacity: 0; transform: translateY(-38px); }
+    }
+
+    @keyframes glintFlash {
+      0%, 73%  { opacity: 0; transform: scale(0) rotate(-25deg); }
+      81%      { opacity: 1; transform: scale(1.18) rotate(12deg); }
+      87%      { opacity: 0.9; transform: scale(0.92) rotate(30deg); }
+      95%, 100%{ opacity: 0; transform: scale(0) rotate(50deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+      .magma-mid, .volcano-veins { opacity: 0.75; }
+      .orbital-rings { opacity: 0.5; }
+    }
+  </style>
+
+  
+  <circle class="aura" cx="400" cy="285" r="185" fill="url(#globe-aura)" />
+
+  
+  <circle class="pulse-ring-1" cx="400" cy="285" r="134" fill="none" stroke="#ff6b24" stroke-width="2" />
+  <circle class="pulse-ring-2" cx="400" cy="285" r="134" fill="none" stroke="#ff9944" stroke-width="1.2" />
+
+  
+  <g class="orbital-rings" fill="none">
+    <path d="M 192 320 A 208 38 0 0 1 608 320" stroke="url(#orbit-back)" stroke-width="1.6" />
+    <path d="M 238 322 A 162 25 0 0 1 562 322" stroke="url(#orbit-back)" stroke-width="1.2" />
+  </g>
+
+  
+  <g id="litoverse-globe">
+    
+    <circle cx="400" cy="285" r="127" fill="url(#globe-bg)" />
+
+    
+    <g clip-path="url(#globe-clip)">
+      
+      <g fill="url(#continent-grad)">
+        
+        <path d="M 272 222 C 282 195 304 178 332 176 L 348 184 L 342 198 L 356 208 L 344 222 L 330 226 L 320 242 L 306 250 L 315 262 L 302 268 L 288 256 L 274 244 Z" />
+        
+        <path d="M 336 168 L 356 164 L 366 176 L 352 184 Z" />
+        
+        <path d="M 314 274 L 338 272 L 364 288 L 376 306 L 366 328 L 352 350 L 344 378 L 332 396 L 322 384 L 320 356 L 312 326 L 302 296 Z" />
+        
+        <path d="M 426 196 L 448 182 L 478 186 L 508 206 L 522 232 L 502 246 L 476 244 L 456 238 L 434 242 L 422 228 L 432 212 Z" />
+        
+        <path d="M 426 254 L 456 248 L 484 256 L 504 276 L 516 294 L 502 316 L 492 342 L 476 368 L 460 374 L 450 352 L 444 322 L 424 302 L 418 278 Z" />
+        
+        <path d="M 503 336 L 511 334 L 508 356 L 499 354 Z" />
+      </g>
+
+      
+      <path d="M 400 154 L 385 186 L 412 215 L 383 248 L 414 283 L 386 318 L 411 351 L 392 384 L 401 416" fill="none" stroke="#070709" stroke-width="14" stroke-linejoin="miter" stroke-linecap="round" />
+
+      
+      <path class="magma-mid" d="M 412 215 L 430 226 M 383 248 L 364 258 M 414 283 L 432 294 M 386 318 L 368 330" fill="none" stroke="#ff5500" stroke-width="2.5" stroke-linecap="round" filter="url(#glow-soft)" />
+
+      
+      <path class="magma-outer" d="M 400 154 L 385 186 L 412 215 L 383 248 L 414 283 L 386 318 L 411 351 L 392 384 L 401 416" fill="none" stroke="#ff3b00" stroke-width="18" stroke-linejoin="round" filter="url(#glow-heavy)" />
+      <path class="magma-mid" d="M 400 154 L 385 186 L 412 215 L 383 248 L 414 283 L 386 318 L 411 351 L 392 384 L 401 416" fill="none" stroke="url(#magma-crack-grad)" stroke-width="7.5" stroke-linejoin="miter" filter="url(#glow-soft)" />
+      <path class="magma-core" d="M 400 154 L 385 186 L 412 215 L 383 248 L 414 283 L 386 318 L 411 351 L 392 384 L 401 416" fill="none" stroke="#fffbe0" stroke-width="2.6" stroke-linejoin="miter" />
+
+      
+      <circle cx="400" cy="285" r="127" fill="none" stroke="#000000" stroke-width="10" stroke-opacity="0.45" />
+    </g>
+
+    
+    <circle cx="400" cy="285" r="127" fill="none" stroke="url(#globe-rim)" stroke-width="2.2" />
+
+    
+    <path d="M 336 175 C 362 154 377 132 385 113 Q 400 119 415 113 C 423 132 438 154 464 175 C 444 164 422 158 400 158 C 378 158 356 164 336 175 Z" fill="url(#volcano-body)" />
+
+    
+    <g class="volcano-veins" fill="none" stroke-linecap="round" filter="url(#glow-soft)">
+      <path d="M 390 116 L 382 135 L 372 152 L 360 165" stroke="#ff5500" stroke-width="2.2" />
+      <path d="M 400 117 L 398 136 L 402 155" stroke="#ff9900" stroke-width="2.6" />
+      <path d="M 410 116 L 418 134 L 428 150 L 440 164" stroke="#ff5500" stroke-width="2.2" />
+      <ellipse cx="400" cy="114" rx="14" ry="4" fill="#ff7b00" />
+    </g>
+  </g>
+
+  
+  
+  <circle class="crater-flash" cx="400" cy="110" r="46" fill="url(#crater-burst)" />
+
+  
+  <g fill="#ff9e2c" filter="url(#glow-soft)">
+    <path class="phase1-drop-1" d="M 400 84 C 405 94 405 103 400 107 C 395 103 395 94 400 84 Z" />
+    <path class="phase1-drop-2" d="M 387 95 C 392 101 393 107 390 110 C 385 108 384 102 387 95 Z" />
+    <path class="phase1-drop-3" d="M 413 95 C 408 101 407 107 410 110 C 415 108 416 102 413 95 Z" />
+  </g>
+
+  
+  <g fill="none" stroke-linecap="round" filter="url(#glow-soft)">
+    <path class="lava-arc" d="M 398 110 Q 368 46 326 32" stroke="#ffae33" stroke-width="3.2" />
+    <path class="lava-arc d2" d="M 402 110 Q 436 36 478 26" stroke="#ffd452" stroke-width="3.4" />
+    <path class="lava-arc" d="M 400 110 Q 406 54 416 18" stroke="#fff0a6" stroke-width="2.6" />
+    <path class="lava-arc d2" d="M 394 112 Q 350 72 318 148" stroke="#ff6200" stroke-width="2.6" />
+    <path class="lava-arc d3" d="M 406 112 Q 456 68 488 158" stroke="#ff7300" stroke-width="2.8" />
+    <path class="lava-arc d3" d="M 405 112 Q 478 88 514 196" stroke="#ff4800" stroke-width="2" />
+  </g>
+
+  
+  <g class="spark-burst" fill="#ffd166" filter="url(#glow-soft)">
+    <circle cx="352" cy="58" r="2.6" />
+    <circle cx="372" cy="40" r="2" />
+    <circle cx="388" cy="28" r="2.8" />
+    <circle cx="424" cy="36" r="2.2" />
+    <circle cx="448" cy="52" r="2.8" />
+    <circle cx="468" cy="76" r="2" />
+    <circle cx="336" cy="84" r="2" />
+    <circle cx="484" cy="112" r="2.2" />
+    <circle cx="322" cy="118" r="1.8" />
+  </g>
+
+  
+  <g class="orbital-rings" fill="none" filter="url(#glow-soft)">
+    <path d="M 608 320 A 208 38 0 0 1 192 320" stroke="url(#orbit-front)" stroke-width="2.2" />
+    <path d="M 562 322 A 162 25 0 0 1 238 322" stroke="url(#orbit-front)" stroke-width="1.5" />
+  </g>
+
+  
+  <g class="embers-group" fill="#ff8524" filter="url(#glow-soft)">
+    <circle cx="388" cy="96" r="1.8" opacity="0.9" />
+    <circle cx="412" cy="86" r="2.1" opacity="0.85" />
+    <circle cx="374" cy="118" r="1.5" opacity="0.7" />
+    <circle cx="428" cy="112" r="1.6" opacity="0.75" />
+    <circle cx="395" cy="212" r="1.8" opacity="0.8" />
+    <circle cx="416" cy="242" r="1.6" opacity="0.7" />
+    <circle cx="382" cy="322" r="2.0" opacity="0.85" />
+    <circle cx="412" cy="348" r="1.8" opacity="0.8" />
+    <circle cx="364" cy="340" r="1.5" opacity="0.6" />
+    <circle cx="438" cy="328" r="1.6" opacity="0.65" />
+    <circle cx="400" cy="378" r="2.2" opacity="0.9" />
+  </g>
+
+  
+  <g class="lens-flare" filter="url(#glow-soft)">
+    <rect x="130" y="263" width="290" height="5" rx="2.5" fill="url(#flare-beam)" />
+    <rect x="380" y="298" width="290" height="5" rx="2.5" fill="url(#flare-beam)" />
+  </g>
+
+  
+  <circle class="o-shock-1" cx="324" cy="285" r="34" fill="url(#o-glow)" stroke="#ffbb66" stroke-width="2.4" />
+  <circle class="o-shock-2" cx="324" cy="285" r="34" fill="none" stroke="#ffffff" stroke-width="1.4" />
+
+  
+  <g id="litoverse-wordmark" filter="url(#text-shadow)">
+    
+    <path d="M 170 256 H 182 V 302 H 206 V 314 H 170 Z" fill="#ffffff" />
+    
+    <path d="M 218 256 H 230 V 314 H 218 Z" fill="#ffffff" />
+    
+    <path d="M 241 256 H 285 V 268 H 269 V 314 H 257 V 268 H 241 Z" fill="#ffffff" />
+
+    
+    <g class="split-o-group">
+      <path class="split-o-fill" d="M 295.16 282 A 29 29 0 0 1 352.84 282 L 340.73 282 A 17 17 0 0 0 307.27 282 Z" fill="#ffffff" />
+      <path class="split-o-fill" d="M 352.84 288 A 29 29 0 0 1 295.16 288 L 307.27 288 A 17 17 0 0 0 340.73 288 Z" fill="#ffffff" />
+    </g>
+
+    
+    <path d="M 363 256 H 376 L 389 296 L 402 256 H 415 L 395 314 H 383 Z" fill="#ffffff" />
+    
+    <path d="M 427 256 H 467 V 267.5 H 439 V 279.5 H 463 V 290.5 H 439 V 302.5 H 467 V 314 H 427 Z" fill="#ffffff" />
+    
+    <path fill-rule="evenodd" d="M 481 256 H 508 C 520 256 526 263 526 274 C 526 283 521 289 513 291 L 528 314 H 514 L 501 293 H 493 V 314 H 481 Z M 493 267 V 282 H 507 C 512 282 514 279 514 274.5 C 514 270 512 267 507 267 Z" fill="#ffffff" />
+    
+    <path d="M 578 269 L 567 272 C 566 268 563 266 558 266 C 553 266 550 268 550 271.5 C 550 275 553 276.5 561 278.5 C 573 281.5 580 286 580 296.5 C 580 307.5 571.5 315 558.5 315 C 546 315 538.5 309 536.5 299 L 548 296 C 549.5 301.5 553.5 304.5 559 304.5 C 564.5 304.5 568 302 568 297.5 C 568 293.5 564.5 291.5 556.5 289.5 C 545 286.5 538.5 282.5 538.5 272.5 C 538.5 262 546.5 255 558 255 C 568.5 255 575.5 260 578 269 Z" fill="#ffffff" />
+    
+    <path d="M 592 256 H 632 V 267.5 H 604 V 279.5 H 628 V 290.5 H 604 V 302.5 H 632 V 314 H 592 Z" fill="#ffffff" />
+  </g>
+
+  
+  <g class="star-glint">
+    <circle cx="632" cy="256" r="22" fill="url(#glint-halo)" />
+    <path d="M 632 224 L 635 253 L 664 256 L 635 259 L 632 288 L 629 259 L 600 256 L 629 253 Z" fill="#ffffff" />
+    <path d="M 632 243 L 633.5 254.5 L 645 256 L 633.5 257.5 L 632 269 L 630.5 257.5 L 619 256 L 630.5 254.5 Z" fill="#ffffff" transform="rotate(45 632 256)" opacity="0.85" />
+  </g>
+</svg>

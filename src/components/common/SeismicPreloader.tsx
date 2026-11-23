@@ -44,20 +44,15 @@ export const SeismicPreloader: React.FC<SeismicPreloaderProps> = ({ moduleType, 
       aria-live="polite"
       aria-label={`Memuat simulasi: ${meta.title}`}
     >
-      <div className="seismic-radar-rig">
-        {/* Radar Sweeping Line */}
-        <div className="radar-sweep-cone" />
-
-        {/* Concentric Seismic Wave Rings */}
-        <div className="seismic-ring ring-1" />
-        <div className="seismic-ring ring-2" />
-        <div className="seismic-ring ring-3" />
-
-        {/* Epicenter Central Node */}
-        <div className="seismic-epicenter">
-          <span className="epicenter-core" />
-          <span className="epicenter-pulse" />
-        </div>
+      <div className="seismic-logo-wrap">
+        <img
+          src="/litoverse-logo.svg"
+          alt=""
+          aria-hidden="true"
+          className="seismic-logo-img"
+          width="800"
+          height="500"
+        />
       </div>
 
       <div className="seismic-status-card">

@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="topbar">
-      {/* Left: Mercury Brand Mark with Concentric-Circle Lithosphere Icon */}
+      {/* Left: LITOVERSE Horizontal Animated Brand Lockup */}
       <div
         className="aside-brand"
         onClick={handleGoHome}
@@ -83,23 +83,15 @@ export const Header: React.FC<HeaderProps> = ({
           if (e.key === 'Enter' || e.key === ' ') handleGoHome();
         }}
         title="Kembali ke Beranda (Lobby Game)"
+        aria-label="LITOVERSE — Kembali ke Beranda"
       >
-        <svg
-          className="mercury-mark"
-          width="32"
-          height="32"
-          viewBox="0 0 32 32"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.85" />
-          <circle cx="16" cy="16" r="9.5" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.6" />
-          <circle cx="16" cy="16" r="4.5" fill="#5266eb" />
-        </svg>
-        <div className="brand-text">
-          <b>Dinamika Litosfer</b>
-          <small>Geografi · UM</small>
-        </div>
+        <img
+          src="/logo-horizontal.svg"
+          alt="LITOVERSE"
+          className="navbar-brand-logo"
+          width="1088"
+          height="340"
+        />
       </div>
 
       {/* Right: Partner Logo, Crumb Indicator, Sound Toggle, Shortcuts & Reference Action */}

@@ -38,7 +38,20 @@ export const ModulePage: React.FC<ModulePageProps> = ({ currentModuleId, isActiv
   const isViewerActive = isActive && (!isMobile || mobileView === 'model');
 
   const moduleData = ALL_MODULES[moduleId] || ALL_MODULES.struktur;
-  const nextConfig = NEXT_MODULE_CONFIG[moduleId] || { target: '/kuis', label: 'Berikutnya →' };
+  const [quizUnlockStatus, setQuizUnlockStatus] = useState(() => progressStore.getQuizUnlockStatus());
+
+  useEffect(() => {
+    return progressStore.subscribe(() => {
+      setQuizUnlockStatus(progressStore.getQuizUnlockStatus());
+    });
+  }, []);
+
+  const remainingBeforeQuiz = quizUnlockStatus.remainingModules.find((m) => m.id !== 'endogen');
+  const nextConfig = moduleId === 'endogen'
+    ? (remainingBeforeQuiz
+        ? { target: remainingBeforeQuiz.path, label: `Lanjut ke ${remainingBeforeQuiz.title}` }
+        : NEXT_MODULE_CONFIG.endogen)
+    : (NEXT_MODULE_CONFIG[moduleId] || NEXT_MODULE_CONFIG.endogen);
   const challenge = INQUIRY_CHALLENGES[moduleId] || null;
 
   const [isChallengeDone, setIsChallengeDone] = useState(() =>
@@ -111,6 +124,11 @@ export const ModulePage: React.FC<ModulePageProps> = ({ currentModuleId, isActiv
 
   const handleNextCta = () => {
     progressStore.completeModule(moduleId);
+    if (moduleId === 'endogen') {
+      const latestStatus = progressStore.getQuizUnlockStatus();
+      navigate(latestStatus.unlocked ? '/kuis' : latestStatus.remainingModules[0].path);
+      return;
+    }
     navigate(nextConfig.target);
   };
 
